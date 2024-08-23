@@ -1,0 +1,7 @@
+node_modules
+
+
+
+
+/uploads/img/producto/*
+!/uploads/img/producto/.gitignore

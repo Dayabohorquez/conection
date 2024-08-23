@@ -1,7 +1,9 @@
+import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import { Producto } from '../models/producto.model.js';
+import fileUpload from 'express-fileupload';
+import { Producto } from '../models/producto.model.js'; // Asegúrate de que la ruta es correcta
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,9 +37,9 @@ class ProductoController {
     // Crear un nuevo producto
     static async postProducto(req, res) {
         try {
-            console.log(req)
-            console.log('req.files:', req.files);
-            console.log('req.body:', req.body);
+            console.log('Headers:', req.headers);
+            console.log('Files:', req.files);
+            console.log('Body:', req.body);
 
             if (!req.files || !req.files.foto_Producto) {
                 return res.status(400).json({ message: 'No se subió ningún archivo' });
@@ -47,7 +49,7 @@ class ProductoController {
             const timestamp = Date.now();
             const uniqueFileName = `${uploadedFile.name.split('.')[0]}_${timestamp}.${uploadedFile.name.split('.').pop()}`;
             const uploadPath = path.join(__dirname, '../uploads/img/producto/', uniqueFileName);
-            const fotoProductoURL = `http://localhost:4001/uploads/img/producto/${uniqueFileName}`;
+            const fotoProductoURL = `http://localhost:4000/uploads/img/producto/${uniqueFileName}`;
 
             uploadedFile.mv(uploadPath, async (err) => {
                 if (err) {
@@ -87,7 +89,7 @@ class ProductoController {
                 const timestamp = Date.now();
                 const uniqueFileName = `${uploadedFile.name.split('.')[0]}_${timestamp}.${uploadedFile.name.split('.').pop()}`;
                 const uploadPath = path.join(__dirname, '../uploads/img/producto/', uniqueFileName);
-                const foto_ProductoURL = `http://localhost:4001/uploads/img/producto/${uniqueFileName}`;
+                const foto_ProductoURL = `http://localhost:4000/uploads/img/producto/${uniqueFileName}`;
 
                 uploadedFile.mv(uploadPath, async (err) => {
                     if (err) {
@@ -136,4 +138,5 @@ class ProductoController {
     }
 }
 
+// Exportar el controlador
 export default ProductoController;

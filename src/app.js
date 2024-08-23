@@ -18,10 +18,11 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Middleware para JSON y CORS
+// Middleware para manejar la carga de archivos
+app.use(fileUpload());
+
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
-app.use(fileUpload());  
+
 
 
 // Servir archivos estáticos desde la carpeta 'uploads'
