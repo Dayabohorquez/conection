@@ -1,12 +1,12 @@
 import express from 'express';
-import { getDetallesPedidos, getDetallePedido, postDetallePedido, putDetallePedido, deleteDetallePedido } from '../controllers/detalle_pedido.controller.js';
+import detallePedidoController from '../controllers/detalle_pedido.controller.js';
 
 const router = express.Router();
 
-router.get('/detalle', getDetallesPedidos);
-router.get('/detalle/:id', getDetallePedido);
-router.post('/detalle', postDetallePedido);
-router.put('/detalle/:id', putDetallePedido); 
-router.delete('/detalle/:id', deleteDetallePedido);
+router.get('/detalle', detallePedidoController.getDetallesPedidos);
+router.get('/detalle/:id', detallePedidoController.getDetallePedido);
+router.post('/detalle', detallePedidoController.postDetallePedido);
+router.put('/detalle/:id', detallePedidoController.putDetallePedido); 
+router.delete('/detalle/:id', detallePedidoController.deleteDetallePedido);
 
 export default router;

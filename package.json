@@ -4,7 +4,6 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon src/index.js",
     "dev": "nodemon src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -13,10 +12,12 @@
   "description": "",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "conection": "file:",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "express-fileupload": "^1.5.1",
     "jsonwebtoken": "^9.0.2",
-    "morgan": "^1.10.0",
     "mysql2": "^3.11.0",
     "sequelize": "^6.37.3"
   },

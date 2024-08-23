@@ -9,10 +9,9 @@ import informe_pedidoRoutes from './routes/informe_pedido.routes.js';
 import historial_pedidoRoutes from './routes/historial_pedido.routes.js';
 import envioRoutes from './routes/envio.routes.js';
 import detalle_pedidoRoutes from './routes/detalle_pedido.routes.js';
-import authRoutes from './routes/auth.routes.js';
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 4001;
 
 app.use(express.json());
 app.use('/api', usuarioRoutes); 
@@ -24,7 +23,6 @@ app.use('/api', informe_pedidoRoutes);
 app.use('/api', historial_pedidoRoutes);
 app.use('/api', envioRoutes);
 app.use('/api', detalle_pedidoRoutes);
-app.use('/api', authRoutes);
 
 sequelize.authenticate()
     .then(() => {

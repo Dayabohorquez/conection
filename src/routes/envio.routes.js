@@ -1,12 +1,12 @@
 import express from 'express';
-import { getEnvios, getEnvio, postEnvio, putEnvio, deleteEnvio} from '../controllers/envio.controller.js';
+import envioController from '../controllers/envio.controller.js';
 
 const router = express.Router();
 
-router.get('/envio', getEnvios);
-router.get('/envio/:id', getEnvio);
-router.post('/envio', postEnvio);
-router.put('/envio/:id', putEnvio); 
-router.delete('/envio/:id', deleteEnvio);
+router.get('/envio', envioController.getEnvios);
+router.get('/envio/:id', envioController.getEnvio);
+router.post('/envio', envioController.postEnvio);
+router.put('/envio/:id', envioController.putEnvio); 
+router.delete('/envio/:id', envioController.deleteEnvio);
 
 export default router;

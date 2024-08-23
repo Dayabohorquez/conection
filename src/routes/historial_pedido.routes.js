@@ -1,11 +1,11 @@
 import express from 'express';
-import { getHistorials, getHistorial, postHistorial, putHistorial } from '../controllers/historial_pedido.controller.js';
+import historialController from '../controllers/historial_pedido.controller.js';
 
 const router = express.Router();
 
-router.get('/historial', getHistorials);
-router.get('/historial/:id', getHistorial);
-router.post('/historial', postHistorial);
-router.put('/historial/:id', putHistorial); 
+router.get('/historial', historialController.getHistorials);
+router.get('/historial/:id', historialController.getHistorial);
+router.post('/historial', historialController.postHistorial);
+router.put('/historial/:id', historialController.putHistorial); 
 
 export default router;
