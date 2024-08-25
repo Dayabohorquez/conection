@@ -10,7 +10,7 @@ async function main(){
         app.listen(process.env.PORT)
         console.log(`App escuchando en el puerto: ${process.env.PORT}`)
     } catch (error) {
-        console.error('no se conecto la bd por zorra')
+        console.error('no se conecto la bd')
     }
 }
 
