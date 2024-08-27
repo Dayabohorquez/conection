@@ -3,10 +3,10 @@ import envioController from '../controllers/envio.controller.js';
 
 const router = express.Router();
 
-router.get('/envio', envioController.getEnvios);
-router.get('/envio/:id', envioController.getEnvio);
-router.post('/envio', envioController.postEnvio);
-router.put('/envio/:id', envioController.putEnvio); 
-router.delete('/envio/:id', envioController.deleteEnvio);
+router.get('/api/envio', envioController.getEnvios);
+router.get('/api/envio/:id', envioController.getEnvio);
+router.post('/api/envio', envioController.postEnvio);
+router.put('/api/envio/:id', envioController.putEnvio); 
+router.delete('/api/envio/:id', envioController.deleteEnvio);
 
 export default router;

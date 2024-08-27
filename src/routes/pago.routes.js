@@ -3,10 +3,10 @@ import pagoController from '../controllers/pago.controller.js';
 
 const router = express.Router();
 
-router.get('/pagos', pagoController.getPagos);
-router.get('/pagos/:id', pagoController.getPago);
-router.post('/pagos', pagoController.postPago);
-router.put('/pagos/:id', pagoController.putPago); 
-router.delete('/pagos/:id', pagoController.deletePago);
+router.get('/api/pago', pagoController.getPagos);
+router.get('/api/pago/:id', pagoController.getPago);
+router.post('/api/pago', pagoController.postPago);
+router.put('/api/pago/:id', pagoController.putPago); 
+router.delete('/api/pago/:id', pagoController.deletePago);
 
 export default router;

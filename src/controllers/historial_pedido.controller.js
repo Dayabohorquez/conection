@@ -1,30 +1,35 @@
-import { Historial_Pedidos } from '../models/Historial_Pedidos.model.js';
+import { QueryTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
 class HistorialPedidosController {
     // Obtener todos los historiales de pedidos
-    static async getHistorials(req, res) {
-        try {
-            const historiales = await Historial_Pedidos.findAll();
-            res.status(200).json(historiales);
-        } catch (error) {
-            res.status(500).json({ message: 'Error al obtener los historiales de pedidos: ' + error });
-        }
+static async getHistorials(req, res) {
+    try {
+        const historials = await sequelize.query('CALL GetAllHistorials()', { type: QueryTypes.RAW });
+        res.json(historials);
+    } catch (error) {
+        res.status(500).json({ message: 'Error al obtener los historiales de pedidos', error });
     }
+}
 
-    // Obtener un historial de pedido por ID
-    static async getHistorial(req, res) {
-        try {
-            const id = req.params.id;
-            const historial = await Historial_Pedidos.findByPk(id);
-            if (historial) {
-                res.status(200).json(historial);
-            } else {
-                res.status(404).json({ message: 'Historial de pedido no encontrado' });
-            }
-        } catch (error) {
-            res.status(500).json({ message: 'Error al obtener el historial de pedido: ' + error });
+// Obtener un historial de pedido por ID
+static async getHistorial(req, res) {
+    const { id } = req.params;
+    try {
+        const result = await sequelize.query('CALL GetHistorialById(:id)', {
+            replacements: { id },
+            type: QueryTypes.RAW
+        });
+        const historial = result[0];
+        if (historial) {
+            res.json(historial);
+        } else {
+            res.status(404).json({ message: 'Historial de pedido no encontrado' });
         }
+    } catch (error) {
+        res.status(500).json({ message: 'Error al obtener el historial de pedido', error });
     }
+}
 
     // Crear un nuevo historial de pedido
     static async postHistorial(req, res) {
@@ -36,14 +41,13 @@ class HistorialPedidosController {
                 return res.status(400).json({ message: 'Detalles del pedido no válidos' });
             }
 
-            await Historial_Pedidos.create({
-                fecha_consulta,
-                detalles_pedido,
-                usuario_id
+            await sequelize.query('CALL CreateHistorial(:fecha_consulta, :detalles_pedido, :usuario_id)', {
+                replacements: { fecha_consulta, detalles_pedido, usuario_id },
+                type: QueryTypes.RAW 
             });
             res.status(201).json({ message: 'Historial de pedido creado correctamente' });
         } catch (error) {
-            res.status(500).json({ message: 'Error al crear el historial de pedido: ' + error });
+            res.status(500).json({ message: 'Error al crear el historial de pedido: ' + error.message });
         }
     }
 
@@ -58,41 +62,44 @@ class HistorialPedidosController {
                 return res.status(400).json({ message: 'Detalles del pedido no válidos' });
             }
 
-            const [updated] = await Historial_Pedidos.update({
-                fecha_consulta,
-                detalles_pedido,
-                usuario_id
-            }, {
-                where: { id_historial: id }
+            const result = await sequelize.query('CALL GetHistorialById(:historial_id)', {
+                replacements: { historial_id: id },
+                type: QueryTypes.SELECT
             });
+            const historial = result[0];
 
-            if (updated) {
-                res.status(200).json({ message: 'Historial de pedido actualizado correctamente' });
-            } else {
-                res.status(404).json({ message: 'Historial de pedido no encontrado' });
+            if (!historial) {
+                return res.status(404).json({ message: 'Historial de pedido no encontrado' });
             }
+
+            await sequelize.query('CALL UpdateHistorial(:p_id_historial, :p_fecha_consulta, :p_detalles_pedido, :p_usuario_id)', {
+                replacements: { p_id_historial: id, p_fecha_consulta: fecha_consulta, p_detalles_pedido: detalles_pedido, p_usuario_id: usuario_id },
+                type: QueryTypes.RAW
+            });
+            res.status(200).json({ message: 'Historial de pedido actualizado correctamente' });
         } catch (error) {
-            res.status(500).json({ message: 'Error al actualizar el historial de pedido: ' + error });
+            res.status(500).json({ message: 'Error al actualizar el historial de pedido: ' + error.message });
         }
     }
 
-    /*// Eliminar un historial de pedido
+    // Eliminar un historial de pedido
     static async deleteHistorial(req, res) {
         try {
             const id = req.params.id;
-            const deleted = await Historial_Pedidos.destroy({
-                where: { id_historial: id }
+            const result = await sequelize.query('CALL DeleteHistorial(:historial_id)', {
+                replacements: { historial_id: id },
+                type: QueryTypes.RAW
             });
 
-            if (deleted) {
-                res.status(204).send(); // 204 No Content
+            if (result[1] > 0) { 
+                res.status(204).send();
             } else {
                 res.status(404).json({ message: 'Historial de pedido no encontrado' });
             }
         } catch (error) {
-            res.status(500).json({ message: 'Error al eliminar el historial de pedido: ' + error });
+            res.status(500).json({ message: 'Error al eliminar el historial de pedido: ' + error.message });
         }
-    }*/
+    }
 }
 
 export default HistorialPedidosController;

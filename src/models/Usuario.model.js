@@ -1,10 +1,13 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../config/db.js";
+import bcrypt from 'bcrypt';
 
 class Usuario extends Model {
     // Método para crear un nuevo usuario
     static async createUsuario(usuario) {
         try {
+            const claveEncriptada = await bcrypt.hash(usuario.contrasena_usuario, 2);
+            usuario.contrasena_usuario = claveEncriptada;
             return await this.create(usuario);
         } catch (error) {
             console.error(`Unable to create usuario: ${error}`);
@@ -55,6 +58,10 @@ class Usuario extends Model {
             throw error;
         }
     }
+
+    async comparar(contrasena_usuario) {
+        return await bcrypt.compare(contrasena_usuario, this.contrasena_usuario);
+    }
 }
 
 // Definición del modelo Usuario en Sequelize
@@ -77,7 +84,7 @@ Usuario.init({
         allowNull: false
     },
     correo_electronico_usuario: {
-        type: DataTypes.STRING(30),
+        type: DataTypes.STRING(255),
         allowNull: false
     },
     usuario: {
@@ -85,7 +92,7 @@ Usuario.init({
         allowNull: false
     },
     contrasena_usuario: {
-        type: DataTypes.STRING(35),
+        type: DataTypes.TEXT, // El tamaño de 60 es más apropiado para contraseñas encriptadas
         allowNull: false
     },
     rol_usuario: {

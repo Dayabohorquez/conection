@@ -1,39 +1,42 @@
-import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import fileUpload from 'express-fileupload';
-import { Producto } from '../models/producto.model.js'; // Asegúrate de que la ruta es correcta
+import { sequelize } from '../config/db.js';
+import { QueryTypes } from 'sequelize';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 class ProductoController {
     // Obtener todos los productos
-    static async getProductos(req, res) {
-        try {
-            const productos = await Producto.getProductos();
-            res.status(200).json(productos);
-        } catch (error) {
-            res.status(500).json({ message: 'Error al obtener los productos: ' + error });
-        }
+static async getProductos(req, res) {
+    try {
+        const productos = await sequelize.query('CALL GetProductos()', { type: QueryTypes.RAW });
+        res.json(productos);
+    } catch (error) {
+        res.status(500).json({ message: 'Error al obtener los productos', error });
     }
+}
 
     // Obtener un producto por ID
-    static async getProducto(req, res) {
-        try {
-            const id = req.params.id;
-            const producto = await Producto.getProductoById(id);
-            if (producto) {
-                res.status(200).json(producto);
-            } else {
-                res.status(404).json({ message: 'Producto no encontrado' });
-            }
-        } catch (error) {
-            res.status(500).json({ message: 'Error al obtener el producto: ' + error });
+static async getProductoById(req, res) {
+    const { id } = req.params;
+    try {
+        const result = await sequelize.query('CALL GetProductoById(:id)', {
+            replacements: { id },
+            type: QueryTypes.RAW
+        });
+        const producto = result[0];
+        if (producto) {
+            res.json(producto);
+        } else {
+            res.status(404).json({ message: 'Producto no encontrado' });
         }
+    } catch (error) {
+        res.status(500).json({ message: 'Error al obtener el producto', error });
     }
-
+}
+    
     // Crear un nuevo producto
     static async postProducto(req, res) {
         try {
@@ -66,7 +69,13 @@ class ProductoController {
                     foto_ProductoURL: fotoProductoURL
                 };
 
-                await Producto.createProducto(p);
+                await sequelize.query(
+                    'CALL CreateProducto(:nombre_producto, :descripcion_producto, :precio_producto, :estado_producto, :tipo_producto, :foto_Producto, :foto_ProductoURL)',
+                    {
+                        replacements: p,
+                        type: QueryTypes.RAW
+                    }
+                );
                 return res.status(200).json({ message: 'Producto creado correctamente' });
             });
         } catch (error) {
@@ -78,9 +87,12 @@ class ProductoController {
     static async putProducto(req, res) {
         try {
             const id = req.params.id;
-            const producto = await Producto.getProductoById(id);
+            const productoExistente = await sequelize.query('CALL GetProductoById(:producto_id)', {
+                replacements: { producto_id: id },
+                type: QueryTypes.SELECT
+            });
 
-            if (!producto) {
+            if (productoExistente.length === 0) {
                 return res.status(404).json({ message: 'Producto no encontrado' });
             }
 
@@ -96,8 +108,8 @@ class ProductoController {
                         return res.status(500).json({ message: 'Error al mover el archivo: ' + err });
                     }
 
-                    if (producto.foto_Producto) {
-                        const oldImagePath = path.join(__dirname, '..', producto.foto_Producto);
+                    if (productoExistente[0].foto_Producto) {
+                        const oldImagePath = path.join(__dirname, '..', productoExistente[0].foto_Producto);
                         if (fs.existsSync(oldImagePath)) {
                             try {
                                 fs.unlinkSync(oldImagePath);
@@ -109,16 +121,41 @@ class ProductoController {
                     }
 
                     const updatedProducto = {
-                        ...req.body,
+                        nombre_producto: req.body.nombre_producto,
+                        descripcion_producto: req.body.descripcion_producto,
+                        precio_producto: req.body.precio_producto,
+                        estado_producto: req.body.estado_producto,
+                        tipo_producto: req.body.tipo_producto,
                         foto_Producto: `./uploads/img/producto/${uniqueFileName}`,
                         foto_ProductoURL
                     };
 
-                    await Producto.updateProducto(id, updatedProducto);
+                    await sequelize.query(
+                        'CALL UpdateProducto(:producto_id, :nombre_producto, :descripcion_producto, :precio_producto, :estado_producto, :tipo_producto, :foto_Producto, :foto_ProductoURL)',
+                        {
+                            replacements: { producto_id: id, ...updatedProducto },
+                            type: QueryTypes.RAW
+                        }
+                    );
                     res.status(200).json({ message: 'Producto actualizado correctamente' });
                 });
             } else {
-                await Producto.updateProducto(id, req.body);
+                await sequelize.query(
+                    'CALL UpdateProducto(:producto_id, :nombre_producto, :descripcion_producto, :precio_producto, :estado_producto, :tipo_producto, :foto_Producto, :foto_ProductoURL)',
+                    {
+                        replacements: {
+                            producto_id: id,
+                            nombre_producto: req.body.nombre_producto,
+                            descripcion_producto: req.body.descripcion_producto,
+                            precio_producto: req.body.precio_producto,
+                            estado_producto: req.body.estado_producto,
+                            tipo_producto: req.body.tipo_producto,
+                            foto_Producto: productoExistente[0].foto_Producto,
+                            foto_ProductoURL: productoExistente[0].foto_ProductoURL
+                        },
+                        type: QueryTypes.RAW
+                    }
+                );
                 res.status(200).json({ message: 'Producto actualizado correctamente' });
             }
         } catch (error) {
@@ -130,7 +167,10 @@ class ProductoController {
     static async patchProducto(req, res) {
         try {
             const id = req.params.id;
-            await Producto.toggleProductoState(id);
+            await sequelize.query('CALL ToggleProductoState(:producto_id)', {
+                replacements: { producto_id: id },
+                type: QueryTypes.RAW
+            });
             res.status(200).json({ message: 'Estado del producto actualizado correctamente' });
         } catch (error) {
             res.status(500).json({ message: 'Error al actualizar el estado del producto: ' + error });

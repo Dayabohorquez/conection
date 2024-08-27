@@ -3,10 +3,10 @@ import detallePedidoController from '../controllers/detalle_pedido.controller.js
 
 const router = express.Router();
 
-router.get('/detalle', detallePedidoController.getDetallesPedidos);
-router.get('/detalle/:id', detallePedidoController.getDetallePedido);
-router.post('/detalle', detallePedidoController.postDetallePedido);
-router.put('/detalle/:id', detallePedidoController.putDetallePedido); 
-router.delete('/detalle/:id', detallePedidoController.deleteDetallePedido);
+router.get('/api/detalle', detallePedidoController.getDetallesPedidos);
+router.get('/api/detalle/:id', detallePedidoController.getDetallePedido);
+router.post('/api/detalle', detallePedidoController.postDetallePedido);
+router.put('/api/detalle/:id', detallePedidoController.putDetallePedido); 
+router.delete('/api/detalle/:id', detallePedidoController.deleteDetallePedido);
 
 export default router;

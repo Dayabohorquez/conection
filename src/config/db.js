@@ -2,7 +2,7 @@
 import { Sequelize } from 'sequelize';
 import dotenv from 'dotenv';
 
-dotenv.config(); // Cargar las variables de entorno desde el archivo .env
+dotenv.config(); 
 
 const sequelize = new Sequelize(
     process.env.DB_SCHEMA,
@@ -12,7 +12,7 @@ const sequelize = new Sequelize(
         host: process.env.DB_HOST,
         port: process.env.DB_PORT,
         dialect: 'mysql',
-        logging: false, // Opcional: para desactivar los logs de SQL
+        logging: false, 
     }
 );
 

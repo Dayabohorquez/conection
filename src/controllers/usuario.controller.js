@@ -20,7 +20,7 @@ class UsuarioController {
                 replacements: { id },
                 type: QueryTypes.RAW
             });
-            const usuario = result[0]; // Accede solo al primer recordset, que contiene el usuario
+            const usuario = result[0];
             if (usuario) {
                 res.json(usuario);
             } else {
@@ -37,27 +37,21 @@ class UsuarioController {
         try {
             await sequelize.query('CALL CreateUsuario(:nombre_usuario, :apellido_usuario, :celular_usuario, :correo_electronico_usuario, :usuario, :contrasena_usuario, :rol_usuario, :estado_usuario)', {
                 replacements: { nombre_usuario, apellido_usuario, celular_usuario, correo_electronico_usuario, usuario, contrasena_usuario, rol_usuario, estado_usuario },
-                type: QueryTypes.RAW
+                type: QueryTypes.RAW,
             });
             res.status(201).json({ message: 'Usuario creado exitosamente' });
         } catch (error) {
-            console.error('Error al crear el usuario:', error); // Agrega este log para ver el error en la consola
+            console.error('Error al crear el usuario:', error);
             res.status(500).json({ message: 'Error al crear el usuario', error });
         }
     }
-    
     
     // Actualizar un usuario
     static async putUsuario(req, res) {
         const id = req.params.id;
         const { nombre_usuario, apellido_usuario, celular_usuario, correo_electronico_usuario, usuario, contrasena_usuario, rol_usuario, estado_usuario } = req.body;
         try {
-            const [usuarioExistente] = await sequelize.query('CALL obtenerUsuarioPorId(:id)', { replacements: { id }, type: QueryTypes.RAW });
-
-            if (usuarioExistente.length === 0) {
-                return res.status(404).json({ message: 'Usuario no encontrado' });
-            }
-
+        
             await sequelize.query('CALL UpdateUsuario(:id, :nombre_usuario, :apellido_usuario, :celular_usuario, :correo_electronico_usuario, :usuario, :contrasena_usuario, :rol_usuario, :estado_usuario)', {
                 replacements: { id, nombre_usuario, apellido_usuario, celular_usuario, correo_electronico_usuario, usuario, contrasena_usuario, rol_usuario, estado_usuario },
                 type: QueryTypes.RAW
@@ -68,21 +62,29 @@ class UsuarioController {
         }
     }
     
-    // Cambiar el estado de un usuario
     static async patchUsuarioEstado(req, res) {
         const id = req.params.id;
-        const { estado_usuario } = req.body;
+    
         try {
-            if (estado_usuario === undefined) {
-                return res.status(400).json({ message: 'El estado del usuario es requerido' });
-            }
 
-            await sequelize.query('CALL ToggleUsuarioState(:id, :estado_usuario)', {
-                replacements: { id, estado_usuario },
-                type: QueryTypes.RAW
+            const resultado = await sequelize.query('CALL ToggleUsuarioState(:usuario_id)', {
+                replacements: { usuario_id: id },
+                type: QueryTypes.SELECT
             });
-            res.status(200).json({ message: 'Estado del usuario actualizado correctamente' });
+
+            if (Array.isArray(resultado) && resultado.length > 0) {
+                const estadoActualizado = resultado[0][0]?.estado_despues;
+    
+                if (estadoActualizado !== undefined) {
+                    res.status(200).json({ message: 'Estado del usuario actualizado correctamente', estadoActualizado });
+                } else {
+                    res.status(500).json({ message: 'El estado del usuario no se pudo obtener' });
+                }
+            } else {
+                res.status(500).json({ message: 'Error al procesar la consulta' });
+            }
         } catch (error) {
+            console.error('Error al cambiar el estado del usuario:', error.message);
             res.status(500).json({ message: 'Error al cambiar el estado del usuario: ' + error.message });
         }
     }
@@ -91,16 +93,11 @@ class UsuarioController {
     static async deleteUsuario(req, res) {
         const id = req.params.id;
         try {
-            const [resultado] = await sequelize.query('CALL DeleteUsuario(:id)', {
+            await sequelize.query('CALL DeleteUsuario(:id)', {
                 replacements: { id },
                 type: QueryTypes.RAW
             });
-
-            if (resultado.affectedRows > 0) {
-                res.status(204).send(); // 204 No Content
-            } else {
-                res.status(404).json({ message: 'Usuario no encontrado' });
-            }
+            res.status(200).json({ message: 'Usuario eliminado correctamente' });
         } catch (error) {
             res.status(500).json({ message: 'Error al eliminar el usuario: ' + error.message });
         }

@@ -1,30 +1,35 @@
-import { Pago } from '../models/Pago.model.js';
+import { QueryTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
 class PagoController {
     // Obtener todos los pagos
-    static async getPagos(req, res) {
-        try {
-            const pagos = await Pago.findAll();
-            res.status(200).json(pagos);
-        } catch (error) {
-            res.status(500).json({ message: 'Error al obtener los pagos: ' + error });
-        }
+static async getPagos(req, res) {
+    try {
+        const pagos = await sequelize.query('CALL GetPagos()', { type: QueryTypes.RAW });
+        res.json(pagos);
+    } catch (error) {
+        res.status(500).json({ message: 'Error al obtener los pagos', error });
     }
+}
 
-    // Obtener un pago por ID
-    static async getPago(req, res) {
-        try {
-            const id = req.params.id;
-            const pago = await Pago.findByPk(id);
-            if (pago) {
-                res.status(200).json(pago);
-            } else {
-                res.status(404).json({ message: 'Pago no encontrado' });
-            }
-        } catch (error) {
-            res.status(500).json({ message: 'Error al obtener el pago: ' + error });
+// Obtener un pago por ID
+static async getPago(req, res) {
+    const { id } = req.params;
+    try {
+        const result = await sequelize.query('CALL GetPagoById(:id)', {
+            replacements: { id },
+            type: QueryTypes.RAW
+        });
+        const pago = result[0];
+        if (pago) {
+            res.json(pago);
+        } else {
+            res.status(404).json({ message: 'Pago no encontrado' });
         }
+    } catch (error) {
+        res.status(500).json({ message: 'Error al obtener el pago', error });
     }
+}
 
     // Crear un nuevo pago
     static async postPago(req, res) {
@@ -37,17 +42,13 @@ class PagoController {
                 return res.status(400).json({ message: 'Método de pago no válido' });
             }
 
-            await Pago.create({
-                nombre_pago,
-                fecha_pago,
-                iva,
-                metodo_pago,
-                subtotal_pago,
-                total_pago
+            await sequelize.query('CALL CreatePago(:nombre_pago, :fecha_pago, :iva, :metodo_pago, :subtotal_pago, :total_pago)', {
+                replacements: { nombre_pago, fecha_pago, iva, metodo_pago, subtotal_pago, total_pago },
+                type: QueryTypes.RAW
             });
             res.status(201).json({ message: 'Pago creado correctamente' });
         } catch (error) {
-            res.status(500).json({ message: 'Error al crear el pago: ' + error });
+            res.status(500).json({ message: 'Error al crear el pago: ' + error.message });
         }
     }
 
@@ -63,24 +64,23 @@ class PagoController {
                 return res.status(400).json({ message: 'Método de pago no válido o vacío' });
             }
 
-            const [updated] = await Pago.update({
-                nombre_pago,
-                fecha_pago,
-                iva,
-                metodo_pago,
-                subtotal_pago,
-                total_pago
-            }, {
-                where: { id_pago: id }
+            const result = await sequelize.query('CALL GetPagoById(:pago_id)', {
+                replacements: { pago_id: id },
+                type: QueryTypes.SELECT
             });
+            const pago = result[0];
 
-            if (updated) {
-                res.status(200).json({ message: 'Pago actualizado correctamente' });
-            } else {
-                res.status(404).json({ message: 'Pago no encontrado' });
+            if (!pago) {
+                return res.status(404).json({ message: 'Pago no encontrado' });
             }
+
+            await sequelize.query('CALL UpdatePago(:pago_id, :nombre_pago, :fecha_pago, :iva, :metodo_pago, :subtotal_pago, :total_pago)', {
+                replacements: { pago_id: id, nombre_pago, fecha_pago, iva, metodo_pago, subtotal_pago, total_pago },
+                type: QueryTypes.RAW
+            });
+            res.status(200).json({ message: 'Pago actualizado correctamente' });
         } catch (error) {
-            res.status(500).json({ message: 'Error al actualizar el pago: ' + error });
+            res.status(500).json({ message: 'Error al actualizar el pago: ' + error.message });
         }
     }
 
@@ -88,17 +88,27 @@ class PagoController {
     static async deletePago(req, res) {
         try {
             const id = req.params.id;
-            const deleted = await Pago.destroy({
-                where: { id_pago: id }
+            const result = await sequelize.query('CALL DeletePago(:pago_id)', {
+                replacements: { pago_id: id },
+                type: QueryTypes.RAW
             });
-
-            if (deleted) {
-                res.status(204).send(); // 204 No Content
+                console.log('Resultado de la consulta:', result);
+                if (Array.isArray(result) && result.length > 0) {
+                const [data] = result;
+                    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object' && 'affectedRows' in data[0]) {
+                    if (data[0].affectedRows > 0) {
+                        res.status(204).send();
+                    } else {
+                        res.status(404).json({ message: 'Pago no encontrado' });
+                    }
+                } else {
+                    res.status(500).json({ message: 'Formato de resultado inesperado' });
+                }
             } else {
-                res.status(404).json({ message: 'Pago no encontrado' });
+                res.status(500).json({ message: 'Formato de resultado inesperado' });
             }
         } catch (error) {
-            res.status(500).json({ message: 'Error al eliminar el pago: ' + error });
+            res.status(500).json({ message: 'Error al eliminar el pago: ' + error.message });
         }
     }
 }
