@@ -1,36 +1,41 @@
-import { Usuario } from "../models/Usuario.model.js";
+import {Usuario} from "../models/Usuario.model.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import bcrypt from 'bcrypt'
 
 dotenv.config();
 
 class LoginController {
     static async login(req, res) {
         try {
-            const { correo_electronico_usuario, contrasena_usuario } = req.body;
-            const user = await Usuario.findOne({ where: { correo_electronico_usuario } });
+            const { email, pass } = req.body;
+            const usuario = await Usuario.findOne({ where: { correo_electronico_usuario: email }});
 
-            if (user) {
-                const isMatch = await bcrypt.compare(contrasena_usuario, user.contrasena_usuario);
-                console.log('¿Las contraseñas coinciden?:', isMatch); // Usando el método de instancia
+            if (usuario) {
+                const isMatch = await usuario.comparar(pass);
                 if (isMatch) {
-                    const token = jwt.sign({ id: user.id_usuario }, process.env.JWT_SECRET, {
+                    const token = jwt.sign({ id: usuario.id_usuario }, process.env.JWT_SECRET, {
                         expiresIn: "1h",
                     });
 
                     return res.status(201).json({
                         message: "Inicio de sesión exitoso",
                         token,
-                        user: {
-                            id: user.id_usuario,
+                        Usuario: {
+                            id_usuario: usuario.id_usuario,
+                            nombre_usuario: usuario.nombre_usuario,
+                            apellido_usuario: usuario.apellido_usuario,
+                            celular_usuario: usuario.celular_usuario,
+                            correo_electronico_usuario: usuario.correo_electronico_usuario,
+                            usuario: usuario.usuario,
+                            rol_usuario: usuario.rol_usuario,
+                            estado_usuario: usuario.estado_usuario,
                         },
                     });
                 } else {
                     return res.status(401).json({ message: "Verifica tu contraseña" });
                 }
             } else {
-                return res.status(401).json({ message: "Verifica tus correo" });
+                return res.status(401).json({ message: "Verifica tu correo" });
             }
         } catch (error) {
             res.status(500).json({ message: "Error al iniciar sesión: " + error });
