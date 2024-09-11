@@ -1,5 +1,5 @@
-import { DataTypes, Model, QueryTypes } from "sequelize";
-import { sequelize } from "../config/db.js";
+import { DataTypes, Model, QueryTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 import bcrypt from 'bcrypt';
 
 class Usuario extends Model {
@@ -170,4 +170,4 @@ Usuario.init({
   underscored: false,
 });
 
-export { Usuario };
+export default Usuario;

@@ -1,5 +1,5 @@
 import { DataTypes, Model, QueryTypes } from 'sequelize';
-import sequelize from '../config/db.js';
+import { sequelize } from "../config/db.js";
 import Pedido from '../models/Pedido.js';
 
 class HistorialPedido extends Model {

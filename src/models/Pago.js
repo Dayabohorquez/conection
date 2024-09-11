@@ -1,4 +1,4 @@
-import { DataTypes, QueryTypes } from "sequelize";
+import { DataTypes, Model, QueryTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
 
 class Pago extends Model {

@@ -1,5 +1,5 @@
 import { DataTypes, Model, QueryTypes } from 'sequelize';
-import { sequelize } from "../config/db";
+import { sequelize } from "../config/db.js";
 import Pedido from './Pedido.js';
 import Producto from './Producto.js';
 
