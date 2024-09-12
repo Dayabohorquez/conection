@@ -28,22 +28,13 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(fileUpload());
+app.use(fileUpload({
+    createParentPath: true,
+  }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Monta las rutas con rutas base
-app.use('/usuarios', usuarioRoutes);
-app.use('/productos', productoRoutes);
-app.use('/pedidos', pedidoRoutes);
-app.use('/pedidos-productos', pedidoProductoRoutes);
-app.use('/pagos', pagoRoutes);
-app.use('/historial-pedidos', historialPedidoRoutes);
-app.use('/envios', envioRoutes);
-app.use('/detalles-pedidos', detallePedidoRoutes);
-app.use('/carritos', carritoRoutes);
-app.use('/eventos', eventoRoutes);
-app.use('/tipos-flor', tipoFlorRoutes);
-app.use('/fechas-especiales', fechaEspecialRoutes);
+app.use(usuarioRoutes, productoRoutes, pedidoRoutes, pedidoProductoRoutes, pagoRoutes, historialPedidoRoutes, envioRoutes, detallePedidoRoutes, carritoRoutes, eventoRoutes, tipoFlorRoutes, fechaEspecialRoutes);
 
 // Middleware para manejo de errores
 app.use((err, req, res, next) => {

@@ -1,27 +1,47 @@
 import Carrito from '../models/Carrito.js';
 
 class CarritoController {
-  // Obtener el carrito de un usuario
-  static async getCarritoByUsuarioId(req, res) {
-    const { documento } = req.params;
+  static async getAllCarritos(req, res) {
     try {
-      const carrito = await Carrito.getCarritoByUsuarioId(documento);
-      if (carrito.length > 0) {
-        res.json(carrito);
+      const carritos = await Carrito.findAll();
+      if (carritos.length > 0) {
+        res.json(carritos);
       } else {
-        res.status(404).json({ message: 'Carrito no encontrado' });
+        res.status(404).json({ message: 'No hay carritos disponibles' });
       }
     } catch (error) {
-      res.status(500).json({ message: 'Error al obtener carrito por ID de usuario', error });
+      res.status(500).json({ message: 'Error al obtener todos los carritos', error });
     }
   }
 
+  // Obtener el carrito de un usuario
+static async getCarritoByUsuarioId(req, res) {
+  const { documento } = req.params;
+  console.log('Recibiendo documento:', documento);
+  
+  try {
+    const carrito = await Carrito.getCarritoByUsuarioId(documento);
+    console.log('Resultado de la consulta:', carrito);
+    
+    // Verifica si los datos están envueltos en un array
+    if (carrito[0] && carrito[0].length > 0) {
+      res.json(carrito[0]); // Envía el primer nivel del array si hay datos
+    } else {
+      res.status(404).json({ message: 'Carrito no encontrado' });
+    }
+  } catch (error) {
+    console.error('Error al obtener carrito por ID de usuario:', error);
+    res.status(500).json({ message: 'Error al obtener carrito por ID de usuario', error });
+  }
+}
+
+
   // Agregar un producto al carrito
   static async addToCarrito(req, res) {
-    const { id_carrito, documento, id_producto, cantidad } = req.body;
+    const { documento, id_producto, cantidad } = req.body;
     try {
-      const message = await Carrito.addToCarrito(id_carrito, documento, id_producto, cantidad);
-      res.status(201).json({ message });
+      const message = await Carrito.addToCarrito(documento, id_producto, cantidad);
+      res.status(201).json({ message: 'Producto agregado al carrito' });
     } catch (error) {
       res.status(500).json({ message: 'Error al agregar producto al carrito', error });
     }

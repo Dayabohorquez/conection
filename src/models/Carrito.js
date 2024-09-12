@@ -14,7 +14,8 @@ class Carrito extends Model {
           type: QueryTypes.RAW
         }
       );
-      return carrito[0]; // En MySQL, los resultados se devuelven en un array
+      console.log('Resultado de la consulta:', carrito); // Añadir log para depuración
+      return carrito[0]; // Asegúrate de que los datos están en el formato correcto
     } catch (error) {
       console.error(`Unable to get carrito by usuario ID: ${error}`);
       throw error;
@@ -22,16 +23,16 @@ class Carrito extends Model {
   }
 
   // Método para agregar un producto al carrito
-  static async addToCarrito(id_carrito, documento, id_producto, cantidad) {
+  static async addToCarrito(documento, id_producto, cantidad) {
     try {
-      await sequelize.query(
-        'CALL AgregarAlCarrito(:id_carrito, :documento, :id_producto, :cantidad)',
+      const result = await sequelize.query(
+        'CALL AgregarAlCarrito(:documento, :id_producto, :cantidad)',
         {
-          replacements: { id_carrito, documento, id_producto, cantidad },
+          replacements: { documento, id_producto, cantidad },
           type: QueryTypes.RAW
         }
       );
-      return { message: 'Producto agregado al carrito exitosamente' };
+      return result;
     } catch (error) {
       console.error(`Unable to add product to carrito: ${error}`);
       throw error;

@@ -1,29 +1,45 @@
 import Usuario from "../models/Usuario.js";
+import bcrypt from "bcrypt";
 
 class UsuarioController {
   // Obtener todos los usuarios
-  static async getUsuarios(req, res) {
-    try {
+  // Obtener todos los usuarios
+static async getUsuarios(req, res) {
+  try {
       const usuarios = await Usuario.getUsuarios();
-      res.json(usuarios);
-    } catch (error) {
-      res.status(500).json({ message: 'Error al obtener usuarios', error });
-    }
-  }
-
-  // Obtener un usuario por ID
-  static async getUsuarioById(req, res) {
-    const { id } = req.params;
-    try {
-      const usuario = await Usuario.getUsuarioById(id);
-      if (usuario.length === 0) {
-        return res.status(404).json({ message: 'Usuario no encontrado' });
+      const usuariosArray = Object.values(usuarios);
+      console.log('Usuarios obtenidos:', usuariosArray);
+      if (!Array.isArray(usuariosArray) || usuariosArray.length === 0) {
+          return res.status(404).json({ message: 'No se encontraron usuarios' });
       }
-      res.json(usuario[0]);
-    } catch (error) {
-      res.status(500).json({ message: 'Error al obtener usuario', error });
-    }
+      res.json(usuariosArray); // Devuelve todos los usuarios
+  } catch (error) {
+      res.status(500).json({ message: 'Error al obtener usuarios', error });
   }
+}
+
+// Obtener un usuario por ID
+static async getUsuarioById(req, res) {
+  const { documento } = req.params; // Obtén el documento de los parámetros de la solicitud
+  console.log(`Buscando usuario con documento: ${documento}`); // Añade log para depuración
+
+  try {
+    const usuario = await Usuario.getUsuarioById(documento); // Obtén el usuario por documento
+
+    // Imprime el resultado para depuración
+    console.log('Resultado de getUsuarioById:', usuario);
+
+    // Verifica si el usuario es null o no
+    if (!usuario) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    
+    // Devuelve el usuario encontrado
+    res.json(usuario);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener usuario', error });
+  }
+}
 
   // Crear un nuevo usuario
   static async postUsuario(req, res) {
@@ -36,17 +52,13 @@ class UsuarioController {
     }
   }
 
-  // Actualizar un usuario existente
   static async putUsuario(req, res) {
-    const { id } = req.params;
+    const { documento } = req.params; // Cambiado de id a documento
     const {
       tipo_documento,
-      documento,
       nombre_usuario,
       apellido_usuario,
-      celular_usuario,
       correo_electronico_usuario,
-      usuario,
       contrasena_usuario,
       direccion,
       fecha_registro,
@@ -55,38 +67,43 @@ class UsuarioController {
     } = req.body;
 
     try {
-      const usuarioExistente = await Usuario.getUsuarioById(id);
-      if (usuarioExistente.length === 0) {
+      console.log('Buscando usuario con documento:', documento);
+      const usuarioExistente = await Usuario.getUsuarioById(documento); // Verifica si el usuario existe por documento
+
+      if (!usuarioExistente || usuarioExistente.length === 0) {
         return res.status(404).json({ message: 'Usuario no encontrado' });
       }
 
       const updatedData = {
         tipo_documento,
-        documento,
         nombre_usuario,
         apellido_usuario,
-        celular_usuario,
         correo_electronico_usuario,
-        usuario,
-        contrasena_usuario, // Si quieres actualizar la contraseña, asegúrate de encriptarla antes de enviarla
         direccion,
         fecha_registro,
         rol_usuario,
         estado_usuario
       };
 
-      const message = await Usuario.updateUsuario(id, updatedData);
+      // Solo encriptar la contraseña si está presente en el cuerpo de la solicitud
+      if (contrasena_usuario) {
+        updatedData.contrasena_usuario = await bcrypt.hash(contrasena_usuario, 10);
+      }
+
+      console.log('Actualizando usuario con datos:', updatedData);
+      const message = await Usuario.updateUsuario(documento, updatedData); // Usa documento en lugar de id
       res.json({ message });
     } catch (error) {
+      console.error('Error al actualizar usuario:', error); // Agregar más detalles en el log
       res.status(500).json({ message: 'Error al actualizar usuario', error });
     }
   }
 
   // Cambiar el estado del usuario
   static async patchUsuarioEstado(req, res) {
-    const { id } = req.params;
+    const { documento } = req.params; // Asegúrate de que estás extrayendo 'documento' correctamente
     try {
-      const message = await Usuario.toggleUsuarioState(id);
+      const message = await Usuario.toggleUsuarioState(documento); // Pasa 'documento' a la función
       res.json({ message });
     } catch (error) {
       res.status(500).json({ message: 'Error al cambiar estado de usuario', error });

@@ -1,5 +1,8 @@
 import { Router } from 'express';
 import UsuarioController from '../controllers/usuario.controller.js';
+import RegisterController from '../controllers/register.controller.js';
+import LoginController from '../controllers/login.controller.js';
+
 
 const router = Router();
 
@@ -7,24 +10,19 @@ const router = Router();
 router.get('/api/usuarios', UsuarioController.getUsuarios);
 
 // Obtener un usuario por ID
-router.get('/api/usuario/:id', UsuarioController.getUsuarioById);
+router.get('/api/usuario/:documento', UsuarioController.getUsuarioById);
 
 // Crear un nuevo usuario
 router.post('/api/usuario', UsuarioController.postUsuario);
 
 // Actualizar un usuario existente
-router.put('/api/usuario/:id', UsuarioController.putUsuario);
+router.put('/api/usuario/:documento', UsuarioController.putUsuario);
 
 // Cambiar el estado del usuario
-router.patch('/api/usuario/:id/estado', UsuarioController.patchUsuarioEstado);
+router.patch('/api/usuario/:documento/', UsuarioController.patchUsuarioEstado);
 
-// Obtener usuarios por rol
-router.get('/api/usuarios/rol/:rol_usuario', UsuarioController.getUsuariosByRol);
+router.post('/api/register', RegisterController.register); 
+router.post('/api/login', LoginController.login);
 
-// Buscar usuario por correo electrónico
-router.get('/api/usuario/correo/:correo_electronico_usuario', UsuarioController.getUsuarioByCorreo);
-
-// Comparar contraseñas para autenticación
-router.post('/api/usuario/comparar-contrasena', UsuarioController.compararContrasena);
 
 export default router;

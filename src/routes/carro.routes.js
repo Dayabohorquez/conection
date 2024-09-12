@@ -3,6 +3,8 @@ import CarritoController from '../controllers/carro.controller.js';
 
 const router = Router();
 
+router.get('/api/carritos', CarritoController.getAllCarritos);
+
 // Obtener el carrito de un usuario
 router.get('/api/carritos/:documento', CarritoController.getCarritoByUsuarioId);
 

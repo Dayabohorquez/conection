@@ -1,29 +1,21 @@
-import { Router } from 'express';
+import express from 'express';
 import ProductoController from '../controllers/producto.controller.js';
-import fileUpload from 'express-fileupload'; // Asegúrate de instalar este paquete para manejar archivos
 
-// Inicializamos el enrutador
-const router = Router();
-
-// Middleware para manejar archivos
-router.use(fileUpload());
+const router = express.Router();
 
 // Obtener todos los productos
 router.get('/api/productos', ProductoController.obtenerProductos);
 
 // Obtener producto por ID
-router.get('/api/producto/:idProducto', ProductoController.obtenerProductoPorId);
+router.get('/api/productos/:idProducto', ProductoController.obtenerProductoPorId);
 
 // Crear nuevo producto
-router.post('/api/producto', ProductoController.crearProducto);
+router.post('/api/productos', ProductoController.crearProducto);
 
-// Actualizar un producto existente
-router.put('/api/producto/:idProducto', ProductoController.actualizarProducto);
+// Actualizar un producto
+router.put('/api/productos/:idProducto', ProductoController.actualizarProducto);
 
-// Cambiar estado de un producto (activado/desactivado)
-router.patch('/api/producto/:idProducto/estado', ProductoController.cambiarEstadoProducto);
-
-// Eliminar un producto
-router.delete('/api/producto/:idProducto', ProductoController.eliminarProducto);
+// Cambiar estado de un producto
+router.patch('/api/productos/:idProducto/', ProductoController.cambiarEstadoProducto);
 
 export default router;
