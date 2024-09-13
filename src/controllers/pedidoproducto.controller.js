@@ -14,14 +14,14 @@ class PedidoProductoController {
 
   // Actualizar un pedido
   static async actualizarPedido(req, res) {
-    const { pedidoId } = req.params;
+    const { id_pedido } = req.params;
     const updatedData = req.body;
 
     try {
-      const message = await PedidoProducto.actualizarPedido(pedidoId, updatedData);
-      res.json({ message });
+      const message = await PedidoProducto.actualizarPedido(id_pedido, updatedData);
+      res.status(200).json({ message });
     } catch (error) {
-      res.status(500).json({ message: 'Error al actualizar pedido', error });
+      res.status(500).json({ message: 'Error al actualizar pedido', error: error.message });
     }
   }
 }

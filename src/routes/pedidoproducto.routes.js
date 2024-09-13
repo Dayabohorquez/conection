@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import PedidoProductoController from '../controllers/pedidoProducto.controller.js';
+import PedidoProductoController from '../controllers/pedidoproducto.controller.js';
 
 const router = Router();
 
-// Eliminar un pedido y sus productos asociados
-router.delete('/api/pedido/:pedidoId', PedidoProductoController.eliminarPedido);
+// Ruta para actualizar un pedido
+router.put('/api/pedidos/:id_pedido', PedidoProductoController.actualizarPedido);
 
-// Actualizar un pedido
-router.put('/api/pedido/:pedidoId', PedidoProductoController.actualizarPedido);
+// Ruta para eliminar un pedido
+router.delete('/api/pedidos/:pedidoId', PedidoProductoController.eliminarPedido);
 
 export default router;

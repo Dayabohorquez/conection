@@ -8,13 +8,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 class PedidoController {
-  // Obtener todos los pedidos
   static async obtenerPedidos(req, res) {
     try {
       const pedidos = await Pedido.obtenerPedidos();
       res.json(pedidos);
     } catch (error) {
-      res.status(500).json({ message: 'Error al obtener pedidos', error });
+      console.error('Error al obtener pedidos:', error);
+      res.status(500).json({ message: 'Error al obtener pedidos', error: error.message });
     }
   }
 
@@ -28,51 +28,59 @@ class PedidoController {
       }
       res.json(pedido[0]);
     } catch (error) {
-      res.status(500).json({ message: 'Error al obtener pedido por ID', error });
+      console.error('Error al obtener pedido por ID:', error);
+      res.status(500).json({ message: 'Error al obtener pedido por ID', error: error.message });
     }
   }
 
-  // Crear un nuevo pedido
   static async crearPedido(req, res) {
     try {
-      const { archivo } = req.files || {}; // archivo es un ejemplo de cómo podrías recibir el archivo
-
-      if (archivo) {
+      const { fecha_pedido, estado_pedido, total_pagado, documento, pago_id, id_carrito } = req.body;
+      const { foto_Pedido } = req.files || {};
+      
+      let foto_PedidoURL = '';
+      let uniqueFileName = '';
+      
+      if (foto_Pedido) {
         const timestamp = Date.now();
-        const uniqueFileName = `${archivo.name.split('.')[0]}_${timestamp}.${archivo.name.split('.').pop()}`;
-        const uploadPath = path.join(__dirname, '../uploads/pedidos/', uniqueFileName);
-        const archivoURL = `http://localhost:4000/uploads/pedidos/${uniqueFileName}`;
-
-        archivo.mv(uploadPath, async (err) => {
+        uniqueFileName = `${foto_Pedido.name.split('.')[0]}_${timestamp}.${foto_Pedido.name.split('.').pop()}`;
+        const uploadPath = path.join(__dirname, '../uploads/img/pedidos/', uniqueFileName);
+        foto_PedidoURL = `http://localhost:4000/uploads/img/pedidos/${uniqueFileName}`;
+  
+        foto_Pedido.mv(uploadPath, (err) => {
           if (err) {
-            return res.status(500).json({ message: 'Error al subir el archivo', error: err });
-          }
-
-          // Incluye el URL del archivo en el objeto de datos del pedido
-          const pedidoData = { ...req.body, archivo: `./uploads/pedidos/${uniqueFileName}`, archivoURL };
-
-          try {
-            const message = await Pedido.crearPedido(pedidoData);
-            res.status(201).json({ message });
-          } catch (error) {
-            res.status(500).json({ message: 'Error al crear pedido', error });
+            console.error('Error al subir el archivo:', err);
+            return res.status(500).json({ message: 'Error al subir el archivo', error: err.message });
           }
         });
-      } else {
-        const pedidoData = req.body;
-        try {
-          const message = await Pedido.crearPedido(pedidoData);
-          res.status(201).json({ message });
-        } catch (error) {
-          res.status(500).json({ message: 'Error al crear pedido', error });
-        }
+      }
+    
+      const pedidoData = {
+        fecha_pedido,
+        estado_pedido,
+        total_pagado,
+        foto_Pedido: `./uploads/img/pedidos/${uniqueFileName}`,
+        foto_PedidoURL,
+        documento,
+        pago_id,
+        id_carrito
+      };
+    
+      console.log('PedidoData:', pedidoData);
+    
+      try {
+        await Pedido.crearPedido(pedidoData);
+        res.status(201).json({ message: 'Pedido creado exitosamente' });
+      } catch (error) {
+        console.error('Error al crear pedido en el modelo:', error);
+        res.status(500).json({ message: 'Error al crear pedido', error: error.message });
       }
     } catch (error) {
-      res.status(500).json({ message: 'Error al crear pedido', error });
+      console.error('Error en crearPedido:', error);
+      res.status(500).json({ message: 'Error al crear pedido', error: error.message });
     }
   }
-
-  // Actualizar un pedido existente
+  
   static async actualizarPedido(req, res) {
     const { id_pedido } = req.params;
     const updatedData = req.body;
@@ -83,20 +91,21 @@ class PedidoController {
         return res.status(404).json({ message: 'Pedido no encontrado' });
       }
 
-      if (req.files && req.files.archivo) {
-        const uploadedFile = req.files.archivo;
+      if (req.files && req.files.foto_Pedido) {
+        const uploadedFile = req.files.foto_Pedido;
         const timestamp = Date.now();
-        const uniqueFileName = `${uploadedFile.name.split('.')[0]}_${timestamp}.${uploadedFile.name.split('.').pop()}`;
-        const uploadPath = path.join(__dirname, '../uploads/pedidos/', uniqueFileName);
-        const archivoURL = `http://localhost:4000/uploads/pedidos/${uniqueFileName}`;
+        const uniqueFileName = `${timestamp}_${uploadedFile.name}`;
+        const uploadPath = path.join(__dirname, '../uploads/img/pedidos/', uniqueFileName);
+        const foto_PedidoURL = `http://localhost:4000/uploads/img/pedidos/${uniqueFileName}`;
 
         uploadedFile.mv(uploadPath, async (err) => {
           if (err) {
-            return res.status(500).json({ message: 'Error al mover el archivo', error: err });
+            return res.status(500).json({ message: 'Error al mover el archivo', error: err.message });
           }
 
-          if (pedidoExistente[0].archivo) {
-            const oldImagePath = path.join(__dirname, '..', pedidoExistente[0].archivo);
+          // Eliminar archivo anterior si existe
+          if (pedidoExistente[0].foto_Pedido) {
+            const oldImagePath = path.join(__dirname, '..', pedidoExistente[0].foto_Pedido.replace('http://localhost:4000/', ''));
             if (fs.existsSync(oldImagePath)) {
               try {
                 fs.unlinkSync(oldImagePath);
@@ -107,53 +116,54 @@ class PedidoController {
             }
           }
 
-          const updatedPedido = { ...updatedData, archivo: `./uploads/pedidos/${uniqueFileName}`, archivoURL };
+          const updatedPedido = {
+            ...updatedData,
+            foto_Pedido: `./uploads/img/pedidos/${uniqueFileName}`,
+            foto_PedidoURL
+          };
+
           try {
-            const message = await Pedido.actualizarPedido(id_pedido, updatedPedido);
-            res.status(200).json({ message });
+            await Pedido.actualizarPedido(id_pedido, updatedPedido);
+            res.status(200).json({ message: 'Pedido actualizado correctamente' });
           } catch (error) {
-            res.status(500).json({ message: 'Error al actualizar pedido', error });
+            res.status(500).json({ message: 'Error al actualizar pedido', error: error.message });
           }
         });
       } else {
         // Actualizar el pedido sin cambiar el archivo
         try {
-          const message = await Pedido.actualizarPedido(id_pedido, updatedData);
-          res.status(200).json({ message });
+          await Pedido.actualizarPedido(id_pedido, updatedData);
+          res.status(200).json({ message: 'Pedido actualizado correctamente' });
         } catch (error) {
-          res.status(500).json({ message: 'Error al actualizar pedido', error });
+          res.status(500).json({ message: 'Error al actualizar pedido', error: error.message });
         }
       }
     } catch (error) {
-      res.status(500).json({ message: 'Error al actualizar pedido', error });
+      res.status(500).json({ message: 'Error al actualizar pedido', error: error.message });
     }
   }
 
-  // Eliminar un pedido
-  static async eliminarPedido(req, res) {
+  // Cambiar estado de un pedido
+  static async cambiarEstadoPedido(req, res) {
     const { id_pedido } = req.params;
+    const { nuevo_estado } = req.body;
+    const estadosValidos = ['Pendiente', 'Enviado', 'Entregado', 'Cancelado'];
+
+    if (!estadosValidos.includes(nuevo_estado)) {
+      return res.status(400).json({ message: 'Estado inválido' });
+    }
+
     try {
       const pedidoExistente = await Pedido.obtenerPedidoPorId(id_pedido);
       if (pedidoExistente.length === 0) {
         return res.status(404).json({ message: 'Pedido no encontrado' });
       }
 
-      if (pedidoExistente[0].archivo) {
-        const oldImagePath = path.join(__dirname, '..', pedidoExistente[0].archivo);
-        if (fs.existsSync(oldImagePath)) {
-          try {
-            fs.unlinkSync(oldImagePath);
-            console.log('Archivo eliminado:', oldImagePath);
-          } catch (unlinkError) {
-            console.error('Error al eliminar el archivo:', unlinkError);
-          }
-        }
-      }
-
-      const message = await Pedido.eliminarPedido(id_pedido);
-      res.json({ message });
+      await Pedido.cambiarEstadoPedido(id_pedido, nuevo_estado);
+      res.status(200).json({ message: 'Estado del pedido actualizado correctamente' });
     } catch (error) {
-      res.status(500).json({ message: 'Error al eliminar pedido', error });
+      console.error('Error al cambiar el estado del pedido:', error);
+      res.status(500).json({ message: 'Error al cambiar el estado del pedido', error: error.message });
     }
   }
 
@@ -164,7 +174,8 @@ class PedidoController {
       const historial = await Pedido.obtenerHistorialComprasPorUsuarioId(documento);
       res.json(historial);
     } catch (error) {
-      res.status(500).json({ message: 'Error al obtener historial de compras', error });
+      console.error('Error al obtener historial de compras:', error);
+      res.status(500).json({ message: 'Error al obtener historial de compras', error: error.message });
     }
   }
 }

@@ -29,24 +29,56 @@ class Pedido extends Model {
   }
 
   static async crearPedido(pedidoData) {
+    const { fecha_pedido, estado_pedido, total_pagado, foto_Pedido, foto_PedidoURL, documento, pago_id, id_carrito } = pedidoData;
+  
     try {
-      await sequelize.query('CALL CrearPedido(:id_pedido, :fecha_pedido, :estado_pedido, :total_pagado, :foto_Pedido, :foto_PedidoURL, :documento, :pago_id)', {
-        replacements: pedidoData,
-        type: QueryTypes.RAW,
-      });
-      return { message: 'Pedido creado exitosamente' };
+      // Ejecutar la consulta
+      await sequelize.query(
+        'CALL CrearPedido(:fecha_pedido, :estado_pedido, :total_pagado, :foto_Pedido, :foto_PedidoURL, :documento, :pago_id, :id_carrito)',
+        {
+          replacements: {
+            fecha_pedido,
+            estado_pedido,
+            total_pagado,
+            foto_Pedido,
+            foto_PedidoURL,
+            documento,
+            pago_id,
+            id_carrito
+          },
+          type: sequelize.QueryTypes.RAW // Solo ejecutar el procedimiento, sin esperar resultados
+        }
+      );
+      
+      // No se retorna ningún mensaje
+      return;
     } catch (error) {
-      console.error(`Unable to create pedido: ${error}`);
+      console.error('Error en crearPedido (modelo):', error);
       throw error;
     }
   }
+  
 
   static async actualizarPedido(idPedido, updatedData) {
     try {
-      await sequelize.query('CALL ActualizarPedido(:id_pedido, :fecha_pedido, :estado_pedido, :total_pagado, :foto_Pedido, :foto_PedidoURL, :documento, :pago_id)', {
-        replacements: { id_pedido: idPedido, ...updatedData },
+      // Imprime los datos para depuración
+      console.log('ID Pedido:', idPedido);
+      console.log('Datos a actualizar:', updatedData);
+  
+      await sequelize.query('CALL ActualizarPedido(:p_id_pedido, :p_fecha_pedido, :p_estado_pedido, :p_total_pagado, :p_foto_Pedido, :p_foto_PedidoURL, :p_documento, :p_pago_id)', {
+        replacements: {
+          p_id_pedido: idPedido,
+          p_fecha_pedido: updatedData.fecha_pedido,
+          p_estado_pedido: updatedData.estado_pedido,
+          p_total_pagado: updatedData.total_pagado,
+          p_foto_Pedido: updatedData.foto_Pedido,
+          p_foto_PedidoURL: updatedData.foto_PedidoURL,
+          p_documento: updatedData.documento,
+          p_pago_id: updatedData.pago_id
+        },
         type: QueryTypes.RAW,
       });
+  
       return { message: 'Pedido actualizado exitosamente' };
     } catch (error) {
       console.error(`Unable to update pedido: ${error}`);
@@ -54,15 +86,17 @@ class Pedido extends Model {
     }
   }
 
-  static async eliminarPedido(idPedido) {
+  static async cambiarEstadoPedido(idPedido, nuevoEstado) {
     try {
-      await sequelize.query('CALL EliminarPedido(:id_pedido)', {
-        replacements: { id_pedido: idPedido },
-        type: QueryTypes.RAW,
-      });
-      return { message: 'Pedido y productos asociados eliminados exitosamente' };
+      await sequelize.query(
+        'CALL ActualizarEstadoPedido(:id_pedido, :nuevo_estado)',
+        {
+          replacements: { id_pedido: idPedido, nuevo_estado: nuevoEstado },
+          type: QueryTypes.RAW
+        }
+      );
     } catch (error) {
-      console.error(`Unable to delete pedido: ${error}`);
+      console.error('Error en cambiarEstadoPedido (modelo):', error);
       throw error;
     }
   }

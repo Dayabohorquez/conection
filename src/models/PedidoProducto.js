@@ -17,18 +17,18 @@ class PedidoProducto extends Model {
     }
   }
 
-  static async actualizarPedido(pedidoId, updatedData) {
+  static async actualizarPedido(req, res) {
+    const { id_pedido } = req.params;
+    const updatedData = req.body;
+
     try {
-      await sequelize.query('CALL ActualizarPedido(:id_pedido, :fecha_pedido, :estado_pedido, :total_pagado, :foto_Pedido, :foto_PedidoURL, :documento, :pago_id)', {
-        replacements: { id_pedido: pedidoId, ...updatedData },
-        type: QueryTypes.RAW,
-      });
-      return { message: 'Pedido actualizado exitosamente' };
+      const message = await PedidoProducto.actualizarPedido(id_pedido, updatedData);
+      res.status(200).json({ message });
     } catch (error) {
-      console.error(`Unable to update pedido: ${error}`);
-      throw error;
+      res.status(500).json({ message: 'Error al actualizar pedido', error: error.message });
     }
   }
+  
 
 }
 

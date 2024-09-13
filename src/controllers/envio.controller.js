@@ -22,21 +22,29 @@ class EnvioController {
     }
   }
 
-  // Obtener un envío por ID
   static async getEnvioById(req, res) {
+    if (!req.params || !req.params.id) {
+      return res.status(400).json({ message: 'ID no proporcionado en los parámetros' });
+    }
+  
     const { id } = req.params;
+    console.log(`Consultando ID: ${id}`);
+  
     try {
       const envio = await Envio.getEnvioById(id);
-      if (envio.length > 0) {
-        res.json(envio[0]);
+      console.log('Resultado de la consulta:', envio);
+  
+      if (envio && envio.idEnvio) { // Verifica que `envio` tenga `idEnvio`
+        res.json(envio);
       } else {
         res.status(404).json({ message: 'Envío no encontrado' });
       }
     } catch (error) {
+      console.error('Error al obtener envío por ID:', error);
       res.status(500).json({ message: 'Error al obtener envío por ID', error });
     }
   }
-
+  
   // Actualizar un envío por ID
   static async updateEnvio(req, res) {
     const { id } = req.params;

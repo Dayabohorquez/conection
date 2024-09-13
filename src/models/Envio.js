@@ -20,36 +20,37 @@ class Envio extends Model {
     }
   }
 
-  // Método para obtener todos los envíos
   static async getAllEnvios() {
     try {
       const envios = await sequelize.query(
         'CALL ObtenerEnvios()', 
-        { type: QueryTypes.RAW }
+        { type: QueryTypes.SELECT }
       );
-      return envios[0]; // En MySQL, los resultados se devuelven en un array
+      console.log('Envios:', envios); // Verifica la salida completa
+      return envios;
     } catch (error) {
       console.error(`Unable to find all envios: ${error}`);
       throw error;
     }
-  }
+  }  
 
   // Método para obtener un envío por ID
   static async getEnvioById(id) {
     try {
-      const envio = await sequelize.query(
+      const [result] = await sequelize.query(
         'CALL ObtenerEnvioPorId(:id)', 
         {
           replacements: { id },
           type: QueryTypes.RAW
         }
       );
-      return envio[0]; // En MySQL, los resultados se devuelven en un array
+      return result || {}; // Asegúrate de que siempre se devuelva un objeto vacío si no hay resultado
     } catch (error) {
       console.error(`Unable to find envio by ID: ${error}`);
       throw error;
     }
   }
+  
 
   // Método para actualizar un envío por ID
   static async updateEnvio(id, fecha_envio, estado_envio, pedido_id) {

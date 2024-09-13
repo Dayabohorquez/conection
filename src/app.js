@@ -4,6 +4,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+
 // Importa las rutas
 import usuarioRoutes from './routes/usuario.routes.js';
 import productoRoutes from './routes/producto.routes.js';
