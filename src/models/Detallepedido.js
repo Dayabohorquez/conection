@@ -21,15 +21,12 @@ class DetallePedido extends Model {
   }
 
   // Método para obtener todos los detalles de pedidos
-  static async getAllDetallesPedidos() {
+  static async getAllDetalles() {
     try {
-      const detallesPedidos = await sequelize.query(
-        'CALL ObtenerDetallesPedidos()',
-        { type: QueryTypes.RAW }
-      );
-      return detallesPedidos[0]; // En MySQL, los resultados se devuelven en un array
+      const detalles = await sequelize.query('CALL ObtenerDetallesPedidos()', { type: QueryTypes.RAW });
+      return detalles;
     } catch (error) {
-      console.error(`Unable to find all detalles pedidos: ${error}`);
+      console.error(`Error al obtener detalles de pedidos: ${error.message}`);
       throw error;
     }
   }
@@ -37,20 +34,20 @@ class DetallePedido extends Model {
   // Método para obtener un detalle de pedido por ID
   static async getDetallePedidoById(id) {
     try {
-      const detallePedido = await sequelize.query(
+      const [result] = await sequelize.query(
         'CALL ObtenerDetallePedidoPorId(:id)',
         {
           replacements: { id },
           type: QueryTypes.RAW
         }
       );
-      return detallePedido[0]; // En MySQL, los resultados se devuelven en un array
+      return result;  // Devuelve el resultado directamente
     } catch (error) {
       console.error(`Unable to find detalle pedido by ID: ${error}`);
       throw error;
     }
   }
-
+  
   // Método para actualizar un detalle de pedido por ID
   static async updateDetallePedido(id, id_pedido, nombre_producto, codigo_producto, precio, direccion, cantidad, opciones_adicionales, dedicatoria) {
     try {

@@ -32,7 +32,7 @@ app.use(express.json());
 app.use(fileUpload({
     createParentPath: true,
   }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+  app.use('/uploads', express.static(path.join(__dirname, 'src/uploads')));
 
 // Monta las rutas con rutas base
 app.use(usuarioRoutes, productoRoutes, pedidoRoutes, pedidoProductoRoutes, pagoRoutes, historialPedidoRoutes, envioRoutes, detallePedidoRoutes, carritoRoutes, eventoRoutes, tipoFlorRoutes, fechaEspecialRoutes);

@@ -1,21 +1,13 @@
 import { Router } from 'express';
-import DetallePedidoController from '../controllers/detallepedido.controller.js';
+import DetallePedidoController from '../controllers/detallepedido.controller.js'; // Asegúrate de que el nombre del archivo es correcto
 
 const router = Router();
 
-// Crear un nuevo detalle de pedido
+// Rutas para detalles de pedidos
 router.post('/api/detalles-pedidos', DetallePedidoController.createDetallePedido);
-
-// Obtener todos los detalles de pedidos
-router.get('/api/detalles-pedidos', DetallePedidoController.getAllDetallesPedidos);
-
-// Obtener un detalle de pedido por ID
+router.get('/api/detalles-pedidos', DetallePedidoController.getAllDetalles);
 router.get('/api/detalles-pedidos/:id', DetallePedidoController.getDetallePedidoById);
-
-// Actualizar un detalle de pedido por ID
 router.put('/api/detalles-pedidos/:id', DetallePedidoController.updateDetallePedido);
-
-// Eliminar un detalle de pedido por ID
 router.delete('/api/detalles-pedidos/:id', DetallePedidoController.deleteDetallePedido);
 
 export default router;

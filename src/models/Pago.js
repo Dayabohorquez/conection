@@ -5,9 +5,16 @@ class Pago extends Model {
   static async createPago(pago) {
     try {
       await sequelize.query(
-        'CALL CrearPago(:id_pago, :nombre_pago, :fecha_pago, :iva, :metodo_pago, :subtotal_pago, :total_pago)',
+        'CALL CrearPago(:nombre_pago, :fecha_pago, :iva, :metodo_pago, :subtotal_pago, :total_pago)',
         {
-          replacements: pago,
+          replacements: {
+            nombre_pago: pago.nombre_pago,
+            fecha_pago: pago.fecha_pago,
+            iva: pago.iva,
+            metodo_pago: pago.metodo_pago,
+            subtotal_pago: pago.subtotal_pago,
+            total_pago: pago.total_pago
+          },
           type: QueryTypes.RAW
         }
       );
@@ -17,6 +24,7 @@ class Pago extends Model {
       throw error;
     }
   }
+
 
   static async getPagos() {
     try {
@@ -46,7 +54,15 @@ class Pago extends Model {
       await sequelize.query(
         'CALL ActualizarPago(:id_pago, :nombre_pago, :fecha_pago, :iva, :metodo_pago, :subtotal_pago, :total_pago)',
         {
-          replacements: { id, ...updated_pago },
+          replacements: {
+            id_pago: id,
+            nombre_pago: updated_pago.nombre_pago,
+            fecha_pago: updated_pago.fecha_pago,
+            iva: updated_pago.iva,
+            metodo_pago: updated_pago.metodo_pago,
+            subtotal_pago: updated_pago.subtotal_pago,
+            total_pago: updated_pago.total_pago
+          },
           type: QueryTypes.RAW
         }
       );
@@ -76,6 +92,7 @@ Pago.init({
     type: DataTypes.INTEGER,
     primaryKey: true,
     allowNull: false,
+    autoIncrement: true,
   },
   nombre_pago: {
     type: DataTypes.STRING(100),

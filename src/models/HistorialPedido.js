@@ -7,12 +7,12 @@ class HistorialPedido extends Model {
   static async createHistorial(pedidoId, estadoPedido) {
     try {
       await sequelize.query(
-        'CALL CrearHistorialPedido(:pedidoId, :estadoPedido, :fechaCambio)', 
+        'CALL CrearHistorialPedido(:id_pedido, :estado_pedido, :fecha_cambio)', 
         {
           replacements: {
-            pedidoId,
-            estadoPedido,
-            fechaCambio: new Date()
+            id_pedido: pedidoId,
+            estado_pedido: estadoPedido,
+            fecha_cambio: new Date() // Puedes ajustar la fecha aquí si es necesario
           },
           type: QueryTypes.RAW
         }
