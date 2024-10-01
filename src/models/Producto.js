@@ -16,84 +16,130 @@ class Producto extends Model {
   }
 
   // Obtener producto por ID
-  static async obtenerProductoPorId(idProducto) {
+  static async obtenerProductoPorId(id_producto) {
     try {
-      const [producto] = await sequelize.query('CALL ObtenerProductoPorId(:idProducto)', {
-        replacements: { idProducto },
+      const [producto] = await sequelize.query('CALL ObtenerProductoPorId(:id_producto)', {
+        replacements: { id_producto }, // Cambié aquí
         type: QueryTypes.SELECT
       });
-      return producto[0] || null; // Suponiendo que devuelve un array con un único objeto
+      return producto || null; // Devuelve null si no se encuentra el producto
     } catch (error) {
       console.error(`Unable to fetch producto by ID: ${error}`);
       throw error;
     }
   }
 
-  // Crear nuevo producto
-  static async crearProducto({ codigoProducto, nombreProducto, fotoProducto, foto_ProductoURL, descripcionProducto, precioProducto, estadoProducto, cantidadDisponible, idTipoFlor, idEvento }) {
+  static async crearProducto({
+    codigo_producto,
+    nombre_producto,
+    foto_Producto,
+    foto_ProductoURL,
+    descripcion_producto,
+    precio_producto,
+    cantidad_disponible,
+    id_tipo_flor,
+    id_evento
+  }) {
     try {
-      await sequelize.query('CALL CrearProducto(:codigoProducto, :nombreProducto, :fotoProducto, :foto_ProductoURL, :descripcionProducto, :precioProducto, :estadoProducto, :cantidadDisponible, :idTipoFlor, :idEvento)', {
-        replacements: { codigoProducto, nombreProducto, fotoProducto, foto_ProductoURL, descripcionProducto, precioProducto, estadoProducto, cantidadDisponible, idTipoFlor, idEvento },
+      const query = `
+            CALL CrearProducto(
+                :codigo_producto,
+                :nombre_producto,
+                :foto_Producto,
+                :foto_ProductoURL,
+                :descripcion_producto,
+                :precio_producto,
+                :cantidad_disponible,
+                :id_tipo_flor,
+                :id_evento
+            );
+        `;
+
+      const replacements = {
+        codigo_producto,
+        nombre_producto,
+        foto_Producto,
+        foto_ProductoURL,
+        descripcion_producto,
+        precio_producto,
+        cantidad_disponible,
+        id_tipo_flor,
+        id_evento,
+      };
+
+      await sequelize.query(query, {
+        replacements,
         type: QueryTypes.RAW
       });
+
       return { message: 'Producto creado exitosamente' };
     } catch (error) {
       console.error(`Unable to create producto: ${error}`);
       throw error;
     }
-  }  
-
-  // Actualizar un producto
-  static async actualizarProducto({
-    idProducto,
-    codigoProducto,
-    nombreProducto,
-    fotoProducto,
-    foto_ProductoURL,
-    descripcionProducto,
-    precioProducto,
-    estadoProducto,
-    cantidadDisponible,
-    idTipoFlor,
-    idEvento
-  }) {
-    try {
-      await sequelize.query('CALL ActualizarProducto(:p_id_producto, :p_codigo_producto, :p_nombre_producto, :p_foto_Producto, :p_foto_ProductoURL, :p_descripcion_producto, :p_precio_producto, :p_estado_producto, :p_cantidad_disponible, :p_id_tipo_flor, :p_id_evento)', {
-        replacements: {
-          p_id_producto: idProducto,
-          p_codigo_producto: codigoProducto,
-          p_nombre_producto: nombreProducto,
-          p_foto_Producto: fotoProducto,
-          p_foto_ProductoURL: foto_ProductoURL,
-          p_descripcion_producto: descripcionProducto,
-          p_precio_producto: precioProducto,
-          p_estado_producto: estadoProducto,
-          p_cantidad_disponible: cantidadDisponible,
-          p_id_tipo_flor: idTipoFlor,
-          p_id_evento: idEvento
-        },
-        type: QueryTypes.RAW
-      });
-      return { message: 'Producto actualizado exitosamente' };
-    } catch (error) {
-      console.error(`Unable to update producto: ${error}`);
-      throw error;
-    }
-  } 
-  
-  // Cambiar estado de un producto (activado/desactivado)
-  static async cambiarEstadoProducto(idProducto) {
-    try {
-      await sequelize.query('CALL CambiarEstadoProducto(:idProducto)', {
-        replacements: { idProducto },
-        type: QueryTypes.RAW
-      });
-      return { message: 'Estado de producto actualizado' };
-    } catch (error) {
-      console.error(`Unable to toggle producto state: ${error}`);
-      throw error;
-    }
   }
+
+  static async actualizarProducto({
+    id_producto,
+    codigo_producto,
+    nombre_producto,
+    foto_Producto, // Ahora puede ser undefined
+    foto_ProductoURL, // Ahora puede ser undefined
+    descripcion_producto,
+    precio_producto,
+    cantidad_disponible,
+    id_tipo_flor,
+    id_evento
+}) {
+    try {
+        const query = `
+            CALL actualizarProducto(
+                :id_producto,
+                :codigo_producto,
+                :nombre_producto,
+                :foto_producto, 
+                :foto_productoURL, 
+                :descripcion_producto,
+                :precio_producto,
+                :cantidad_disponible,
+                :id_tipo_flor,
+                :id_evento
+            );
+        `;
+
+        const replacements = {
+            id_producto,
+            codigo_producto,
+            nombre_producto,
+            foto_producto: foto_Producto || null, // Usa null si no hay nueva foto
+            foto_productoURL: foto_ProductoURL || null, // Usa null si no hay nueva URL
+            descripcion_producto,
+            precio_producto,
+            cantidad_disponible,
+            id_tipo_flor,
+            id_evento,
+        };
+
+        await sequelize.query(query, { replacements, type: QueryTypes.RAW });
+    } catch (error) {
+        console.error("Error al actualizar el producto:", error);
+        throw error; // Re-lanzar el error para manejarlo en otro lugar
+    }
+}
+
+  // Cambiar estado de un producto (activado/desactivado)
+  static async cambiarEstadoProducto(idProducto, nuevoEstado) {
+  try {
+    await sequelize.query('CALL CambiarEstadoProducto(:idProducto, :nuevoEstado)', {
+      replacements: { idProducto, nuevoEstado },
+      type: QueryTypes.RAW
+    });
+    return { message: 'Estado de producto actualizado' };
+  } catch (error) {
+    console.error(`Unable to toggle producto state: ${error}`);
+    throw error;
+  }
+}
 }
 
 Producto.init({
@@ -110,10 +156,10 @@ Producto.init({
     type: DataTypes.STRING(30),
     allowNull: false
   },
-  foto_producto: {
+  foto_Producto: {
     type: DataTypes.TEXT
   },
-  foto_productoURL: {
+  foto_ProductoURL: {
     type: DataTypes.TEXT
   },
   descripcion_producto: {

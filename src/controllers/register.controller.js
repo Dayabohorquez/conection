@@ -4,10 +4,10 @@ import Usuario from '../models/Usuario.js';
 class RegisterController {
   static async register(req, res) {
     try {
-      const { tipo_documento, documento, nombre_usuario, apellido_usuario, correo_electronico_usuario, contrasena_usuario } = req.body;
+      const { documento, nombre_usuario, apellido_usuario, correo_electronico_usuario, contrasena_usuario } = req.body;
 
       // Verificar que todos los campos requeridos están presentes
-      if (!tipo_documento || !documento || !nombre_usuario || !apellido_usuario || !correo_electronico_usuario || !contrasena_usuario) {
+      if (!documento || !nombre_usuario || !apellido_usuario || !correo_electronico_usuario || !contrasena_usuario) {
         return res.status(400).json({ message: "Todos los campos son requeridos." });
       }
 
@@ -28,7 +28,6 @@ class RegisterController {
 
       // Crear un nuevo usuario
       await Usuario.create({
-        tipo_documento,
         documento,
         nombre_usuario,
         apellido_usuario,

@@ -10,7 +10,7 @@ class Usuario extends Model {
       usuario.contrasena_usuario = claveEncriptada;
 
       await sequelize.query(
-        'CALL CrearUsuario(:tipo_documento, :documento, :nombre_usuario, :apellido_usuario, :correo_electronico_usuario, :contrasena_usuario, :direccion, :fecha_registro, :estado_usuario)',
+        'CALL CrearUsuario(:documento, :nombre_usuario, :apellido_usuario, :correo_electronico_usuario, :contrasena_usuario, :direccion, :fecha_registro, :estado_usuario)',
         {
           replacements: usuario,
           type: QueryTypes.RAW
@@ -23,91 +23,57 @@ class Usuario extends Model {
     }
   }
 
- // Método para obtener todos los usuarios
-static async getUsuarios() {
-  try {
+  // Método para obtener todos los usuarios
+  static async getUsuarios() {
+    try {
       const usuarios = await sequelize.query('CALL ObtenerUsuarios()', { type: QueryTypes.RAW });
-
       console.log('Resultado de ObtenerUsuarios:', usuarios);
-
       return usuarios;
-  } catch (error) {
+    } catch (error) {
       console.error(`Unable to find all usuarios: ${error}`);
       throw error;
+    }
   }
-}
 
   // Método para obtener un usuario por documento
-static async getUsuarioById(documento) {
-  try {
-    const result = await sequelize.query(
-      'CALL ObtenerUsuarioPorId(:documento)',
-      {
-        replacements: { documento },
-        type: QueryTypes.RAW 
+  static async getUsuarioById(documento) {
+    try {
+      const result = await sequelize.query(
+        'CALL ObtenerUsuarioPorId(:documento)',
+        {
+          replacements: { documento },
+          type: QueryTypes.RAW
+        }
+      );
+      // Imprime el resultado para depuración
+      console.log('Resultado de ObtenerUsuarioPorId:', result);
+      // Verifica si el resultado tiene elementos
+      if (result.length > 0) {
+        return result[0]; // Devolvemos el primer elemento del resultado
       }
-    );
-    // Imprime el resultado para depuración
-    console.log('Resultado de ObtenerUsuarioPorId:', result);
-    // Verifica si el resultado tiene elementos
-    if (result.length > 0) {
-      return result[0]; // Devolvemos el primer elemento del resultado
+      return null;
+    } catch (error) {
+      console.error(`Unable to find usuario by documento: ${error}`);
+      throw error;
     }
-    return null;
-  } catch (error) {
-    console.error(`Unable to find usuario by documento: ${error}`);
-    throw error;
   }
-}
 
-static async updateUsuario(documento, updated_usuario) {
-  try {
-    // Encriptar la contraseña si se proporciona
-    if (updated_usuario.contrasena_usuario) {
-      updated_usuario.contrasena_usuario = await bcrypt.hash(updated_usuario.contrasena_usuario, 10);
-    }
-
-    // Imprimir para depuración
-    console.log('Actualizando usuario con datos:', {
-      documento,
-      tipo_documento: updated_usuario.tipo_documento,
-      nombre_usuario: updated_usuario.nombre_usuario,
-      apellido_usuario: updated_usuario.apellido_usuario,
-      correo_electronico_usuario: updated_usuario.correo_electronico_usuario,
-      contrasena_usuario: updated_usuario.contrasena_usuario,
-      direccion: updated_usuario.direccion,
-      fecha_registro: updated_usuario.fecha_registro,
-      estado_usuario: updated_usuario.estado_usuario
-    });
-
-    // Llamar al procedimiento almacenado
-    const result = await sequelize.query(
-      'CALL ActualizarUsuario(:documento, :tipo_documento, :nombre_usuario, :apellido_usuario, :correo_electronico_usuario, :contrasena_usuario, :direccion, :fecha_registro, :estado_usuario)',
+  // Método para actualizar un usuario
+  static async updateUsuario(documento, updated_usuario) {
+    return await sequelize.query(
+      'CALL ActualizarUsuario(:documento, :nombre_usuario, :apellido_usuario, :correo_electronico_usuario, :direccion)',
       {
         replacements: {
           documento,
-          tipo_documento: updated_usuario.tipo_documento,
           nombre_usuario: updated_usuario.nombre_usuario,
           apellido_usuario: updated_usuario.apellido_usuario,
           correo_electronico_usuario: updated_usuario.correo_electronico_usuario,
-          contrasena_usuario: updated_usuario.contrasena_usuario,
           direccion: updated_usuario.direccion,
-          fecha_registro: updated_usuario.fecha_registro,
-          estado_usuario: updated_usuario.estado_usuario
         },
-        type: QueryTypes.RAW
+        type: QueryTypes.RAW,
       }
-    );
-
-    // Imprimir el resultado para depuración
-    console.log('Resultado de actualización:', result);
-    return { message: 'Usuario actualizado exitosamente' };
-  } catch (error) {
-    console.error(`Unable to update usuario: ${error}`);
-    throw error;
+    )
   }
-}
-  
 
   // Método para cambiar el estado de un usuario
   static async toggleUsuarioState(documento) {
@@ -136,10 +102,6 @@ static async updateUsuario(documento, updated_usuario) {
 
 // Inicialización del modelo
 Usuario.init({
-  tipo_documento: {
-    type: DataTypes.STRING(50),
-    allowNull: false
-  },
   documento: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -168,6 +130,7 @@ Usuario.init({
   },
   fecha_registro: {
     type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
     allowNull: true
   },
   rol_usuario: {

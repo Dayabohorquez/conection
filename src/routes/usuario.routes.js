@@ -19,7 +19,7 @@ router.post('/api/usuario', UsuarioController.postUsuario);
 router.put('/api/usuario/:documento', UsuarioController.putUsuario);
 
 // Cambiar el estado del usuario
-router.patch('/api/usuario/:documento/', UsuarioController.patchUsuarioEstado);
+router.patch('/api/usuario/:documento/estado', UsuarioController.patchUsuarioEstado);
 
 router.post('/api/register', RegisterController.register); 
 router.post('/api/login', LoginController.login);

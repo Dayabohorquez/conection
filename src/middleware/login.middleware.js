@@ -6,7 +6,7 @@ dotenv.config();
 
 export const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.split(' ')[1]; // Asume que el token está en el formato Bearer <token>
+  const token = authHeader && authHeader.split(' ')[1];
 
   if (token == null) return res.status(401).json({ message: 'Token no proporcionado' });
 

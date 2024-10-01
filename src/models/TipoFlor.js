@@ -28,38 +28,38 @@ class TipoFlor extends Model {
   }
 
   // Crear nuevo tipo de flor
-  static async createTipoFlor(tipoFlor) {
-    try {
+static async createTipoFlor(tipoFlor) {
+  try {
       await sequelize.query(
-        'CALL CrearTipoFlor(:nombre_tipo_flor, :foto_tipo_flor, :foto_tipo_florURL)', 
-        {
-          replacements: tipoFlor,
-          type: QueryTypes.RAW
-        }
+          'CALL CrearTipoFlor(:nombre_tipo_flor, :foto_tipo_flor, :foto_tipo_florURL)', 
+          {
+              replacements: tipoFlor,
+              type: QueryTypes.RAW
+          }
       );
       return { message: 'Tipo de flor creado exitosamente' };
-    } catch (error) {
+  } catch (error) {
       console.error(`Unable to create tipo de flor: ${error}`);
       throw error;
-    }
   }
+}
 
-  // Actualizar tipo de flor
-  static async updateTipoFlor(id, updatedTipoFlor) {
-    try {
+// Actualizar tipo de flor
+static async updateTipoFlor(id, updatedTipoFlor) {
+  try {
       await sequelize.query(
-        'CALL ActualizarTipoFlor(:id, :nombre_tipo_flor, :foto_tipo_flor, :foto_tipo_florURL)', 
-        {
-          replacements: { id, ...updatedTipoFlor },
-          type: QueryTypes.RAW
-        }
+          'CALL ActualizarTipoFlor(:id, :nombre_tipo_flor, :foto_tipo_flor, :foto_tipo_florURL)', 
+          {
+              replacements: { id, ...updatedTipoFlor },
+              type: QueryTypes.RAW
+          }
       );
       return { message: 'Tipo de flor actualizado exitosamente' };
-    } catch (error) {
+  } catch (error) {
       console.error(`Unable to update tipo de flor: ${error}`);
       throw error;
-    }
   }
+}
 
   // Eliminar tipo de flor
   static async deleteTipoFlor(id) {
@@ -87,7 +87,6 @@ TipoFlor.init({
   nombre_tipo_flor: {
     type: DataTypes.STRING(50),
     allowNull: false,
-    unique: true
   },
   foto_tipo_flor: {
     type: DataTypes.TEXT,

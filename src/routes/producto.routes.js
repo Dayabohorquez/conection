@@ -12,10 +12,10 @@ router.get('/api/productos/:idProducto', ProductoController.obtenerProductoPorId
 // Crear nuevo producto
 router.post('/api/productos', ProductoController.crearProducto);
 
-// Actualizar un producto
+// Actualizar producto
 router.put('/api/productos/:idProducto', ProductoController.actualizarProducto);
 
 // Cambiar estado de un producto
-router.patch('/api/productos/:idProducto/', ProductoController.cambiarEstadoProducto);
+router.patch('/api/productos/:idProducto/estado', ProductoController.cambiarEstadoProducto);
 
 export default router;

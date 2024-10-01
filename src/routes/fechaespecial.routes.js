@@ -1,11 +1,8 @@
+// src/routes/fechaespecial.routes.js
 import { Router } from 'express';
-import FechaEspecialController from '../controllers/fechaEspecial.controller.js';
-import fileUpload from 'express-fileupload'; // Asegúrate de instalar express-fileupload
+import FechaEspecialController from '../controllers/fechaespecial.controller.js';
 
 const router = Router();
-
-// Middleware para manejar la carga de archivos
-router.use(fileUpload());
 
 // Crear una nueva fecha especial
 router.post('/api/fechas-especiales', FechaEspecialController.createFechaEspecial);
@@ -17,7 +14,7 @@ router.get('/api/fechas-especiales', FechaEspecialController.getAllFechasEspecia
 router.get('/api/fechas-especiales/:id', FechaEspecialController.getFechaEspecialById);
 
 // Actualizar una fecha especial por ID
-router.put('/api/fechas-especiales/:id', FechaEspecialController.updateFechaEspecial);
+router.put('/api/fechas-especiales/:id_fecha_especial', FechaEspecialController.actualizarFechaEspecial);
 
 // Eliminar una fecha especial por ID
 router.delete('/api/fechas-especiales/:id', FechaEspecialController.deleteFechaEspecial);

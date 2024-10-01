@@ -4,12 +4,12 @@ import Pedido from '../models/Pedido.js';
 
 class Envio extends Model {
   // Método para crear un nuevo envío
-  static async createEnvio(fecha_envio, estado_envio, pedido_id) {
+  static async createEnvio(fecha_envio, pedido_id) {
     try {
       await sequelize.query(
-        'CALL CrearEnvio(:fecha_envio, :estado_envio, :pedido_id)', 
+        'CALL CrearEnvio(:fecha_envio, :pedido_id)',
         {
-          replacements: { fecha_envio, estado_envio, pedido_id },
+          replacements: { fecha_envio, pedido_id },
           type: QueryTypes.RAW
         }
       );
@@ -19,12 +19,12 @@ class Envio extends Model {
       throw error;
     }
   }
-
+  
   static async getAllEnvios() {
     try {
       const envios = await sequelize.query(
-        'CALL ObtenerEnvios()', 
-        { type: QueryTypes.SELECT }
+        'CALL ObtenerEnvios()',
+        { type: QueryTypes.RAW }
       );
       console.log('Envios:', envios); // Verifica la salida completa
       return envios;
@@ -32,13 +32,13 @@ class Envio extends Model {
       console.error(`Unable to find all envios: ${error}`);
       throw error;
     }
-  }  
+  }
 
   // Método para obtener un envío por ID
   static async getEnvioById(id) {
     try {
       const [result] = await sequelize.query(
-        'CALL ObtenerEnvioPorId(:id)', 
+        'CALL ObtenerEnvioPorId(:id)',
         {
           replacements: { id },
           type: QueryTypes.RAW
@@ -50,15 +50,16 @@ class Envio extends Model {
       throw error;
     }
   }
-  
+
 
   // Método para actualizar un envío por ID
-  static async updateEnvio(id, fecha_envio, estado_envio, pedido_id) {
+  static async updateEnvio(id, fecha_envio, pedido_id) {
     try {
+
       await sequelize.query(
-        'CALL ActualizarEnvio(:id, :fecha_envio, :estado_envio, :pedido_id)', 
+        'CALL ActualizarEnvio(:id, :fecha_envio, :pedido_id)',
         {
-          replacements: { id, fecha_envio, estado_envio, pedido_id },
+          replacements: { id, fecha_envio, pedido_id },
           type: QueryTypes.RAW
         }
       );
@@ -69,11 +70,27 @@ class Envio extends Model {
     }
   }
 
+  static async cambiarEstadoEnvio(id_envio, estado_envio) {
+    try {
+      await sequelize.query(
+        'CALL ActualizarEstadoEnvio(:id_envio, :estado_envio)',
+        {
+          replacements: { id_envio, estado_envio },
+          type: QueryTypes.RAW
+        }
+      );
+      return { message: 'Estado de envío actualizado exitosamente' };
+    } catch (error) {
+      console.error(`Unable to update envio state: ${error}`);
+      throw error;
+    }
+  }
+
   // Método para eliminar un envío por ID
   static async deleteEnvio(id) {
     try {
       await sequelize.query(
-        'CALL EliminarEnvio(:id)', 
+        'CALL EliminarEnvio(:id)',
         {
           replacements: { id },
           type: QueryTypes.RAW
@@ -92,7 +109,7 @@ Envio.init({
   id_envio: {
     type: DataTypes.INTEGER,
     primaryKey: true,
-    autoIncrement: true, 
+    autoIncrement: true,
     allowNull: false,
   },
   fecha_envio: {

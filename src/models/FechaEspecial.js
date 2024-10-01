@@ -3,20 +3,31 @@ import { sequelize } from "../config/db.js";
 
 class FechaEspecial extends Model {
   // Método para crear una nueva fecha especial
-  static async createFechaEspecial(nombre, fecha, foto, fotoURL) {
+  static async createFechaEspecial({
+    nombre_fecha_especial,
+    fecha,
+    foto,
+    fotoURL
+  }) {
     try {
-      await sequelize.query(
-        'CALL CrearFechaEspecial(:nombre, :fecha, :foto, :fotoURL)', 
-        {
-          replacements: {
-            nombre,
-            fecha,
-            foto,
-            fotoURL
-          },
-          type: QueryTypes.RAW
-        }
-      );
+      const query = `
+            CALL CrearFechaEspecial(
+                :nombre_fecha_especial,
+                :fecha,
+                :foto,
+                :fotoURL
+            );
+        `;
+      const replacements = {
+        nombre_fecha_especial,
+        fecha,
+        foto,
+        fotoURL
+      };
+      await sequelize.query(query, {
+        replacements,
+        type: QueryTypes.RAW
+      });
       return { message: 'Fecha especial creada exitosamente' };
     } catch (error) {
       console.error(`Unable to create fecha especial: ${error}`);
@@ -50,21 +61,37 @@ class FechaEspecial extends Model {
   }
 
   // Método para actualizar una fecha especial por ID
-  static async updateFechaEspecial(id, nombre, fecha, foto, fotoURL) {
+  static async actualizarFechaEspecial({
+    id_fecha_especial,
+    nombre_fecha_especial,
+    fecha,
+    foto,
+    fotoURL
+  }) {
     try {
-      await sequelize.query(
-        'CALL ActualizarFechaEspecial(:id, :nombre, :fecha, :foto, :fotoURL)', 
-        {
-          replacements: {
-            id,
-            nombre,
-            fecha,
-            foto,
-            fotoURL
-          },
-          type: QueryTypes.RAW
-        }
-      );
+      const query = `
+            CALL ActualizarFechaEspecial(
+                :id_fecha_especial,
+                :nombre_fecha_especial,
+                :fecha,
+                :foto,
+                :fotoURL
+            );
+        `;
+
+      const replacements = {
+        id_fecha_especial,
+        nombre_fecha_especial,
+        fecha,
+        foto,
+        fotoURL
+      };
+
+      await sequelize.query(query, {
+        replacements,
+        type: QueryTypes.RAW
+      });
+
       return { message: 'Fecha especial actualizada exitosamente' };
     } catch (error) {
       console.error(`Unable to update fecha especial: ${error}`);
