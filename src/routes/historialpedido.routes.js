@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import HistorialPedidoController from '../controllers/historialPedido.controller.js';
+import HistorialPedidoController from '../controllers/historialpedido.controller.js';
 
 const router = Router();
 
@@ -11,5 +11,8 @@ router.get('/api/historial', HistorialPedidoController.getAllHistorial);
 
 // Obtener historial por ID de pedido
 router.get('/api/historial/:pedidoId', HistorialPedidoController.getHistorialByPedidoId);
+
+router.get('/api/historial/documento/:documento', HistorialPedidoController.getHistorialByDocumento); // Nueva ruta
+
 
 export default router;

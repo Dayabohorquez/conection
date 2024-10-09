@@ -32,6 +32,30 @@ class HistorialPedidoController {
       res.status(500).json({ message: 'Error al obtener historial por ID de pedido', error });
     }
   }
+
+  // Controlador
+static async getHistorialByDocumento(req, res) {
+  const { documento } = req.params;
+  console.log(`Consultando historial para documento: ${documento}`);
+  try {
+    const historial = await HistorialPedido.getHistorialByDocumento(documento);
+    
+    // Verificar si se encontró historial
+    if (!historial || historial.length === 0) {
+      return res.status(404).json({ message: 'No se encontró historial para este documento' });
+    }
+
+    // Responder con el historial encontrado
+    res.json(historial);
+  } catch (error) {
+    console.error(`Error al obtener historial por documento: ${error}`);
+    res.status(500).json({ message: 'Error al obtener historial por documento', error: error.message });
+  }
+}
+
+
+
+
 }
 
 export default HistorialPedidoController;

@@ -1,6 +1,5 @@
 import { DataTypes, Model, QueryTypes } from 'sequelize';
 import { sequelize } from "../config/db.js";
-import Pedido from '../models/Pedido.js';
 
 class HistorialPedido extends Model {
   // Método para crear un nuevo registro en el historial
@@ -12,7 +11,7 @@ class HistorialPedido extends Model {
           replacements: {
             id_pedido: pedidoId,
             estado_pedido: estadoPedido,
-            fecha_cambio: new Date() // Puedes ajustar la fecha aquí si es necesario
+            fecha_cambio: new Date() // Ajusta la fecha aquí si es necesario
           },
           type: QueryTypes.RAW
         }
@@ -48,6 +47,20 @@ class HistorialPedido extends Model {
       throw error;
     }
   }
+
+  // Método para obtener el historial de pedidos por documento
+  static async getHistorialByDocumento(documento) {
+    try {
+      const historial = await sequelize.query('CALL ListarHistorialPedidosPorDocumento(:documento)', {
+        replacements: { documento },
+        type: QueryTypes.RAW
+      });
+      return historial;
+    } catch (error) {
+      console.error(`Unable to find historial by documento: ${error}`);
+      throw error;
+    }
+  }
 }
 
 // Definición del modelo
@@ -73,8 +86,5 @@ HistorialPedido.init({
   timestamps: false,
   underscored: false,
 });
-
-// Relaciones
-HistorialPedido.belongsTo(Pedido, { foreignKey: 'id_pedido' });
 
 export default HistorialPedido;

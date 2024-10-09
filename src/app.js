@@ -10,7 +10,6 @@ import fs from 'fs'; // Asegúrate de importar fs
 import usuarioRoutes from './routes/usuario.routes.js';
 import productoRoutes from './routes/producto.routes.js';
 import pedidoRoutes from './routes/pedido.routes.js';
-import pedidoProductoRoutes from './routes/pedidoproducto.routes.js';
 import pagoRoutes from './routes/pago.routes.js';
 import historialPedidoRoutes from './routes/historialpedido.routes.js';
 import envioRoutes from './routes/envio.routes.js';
@@ -53,7 +52,7 @@ app.use('/uploads/img/tipo_flor', serveIndex(path.join(__dirname, 'uploads/img/t
 app.use('/uploads/img/evento', serveIndex(path.join(__dirname, 'uploads/img/evento'), { icons: true }));
 
 // Monta las rutas con rutas base
-app.use(usuarioRoutes, productoRoutes, pedidoRoutes, pedidoProductoRoutes, pagoRoutes, historialPedidoRoutes, envioRoutes, detallePedidoRoutes, carritoRoutes, eventoRoutes, tipoFlorRoutes, fechaEspecialRoutes);
+app.use(usuarioRoutes, productoRoutes, pedidoRoutes, pagoRoutes, historialPedidoRoutes, envioRoutes, detallePedidoRoutes, carritoRoutes, eventoRoutes, tipoFlorRoutes, fechaEspecialRoutes);
 
 // Middleware para manejo de errores
 app.use((err, req, res, next) => {

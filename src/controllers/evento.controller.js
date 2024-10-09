@@ -34,58 +34,59 @@ class EventoController {
   }
 
   // Crear un nuevo evento
-static async crearEvento(req, res) {
-  // Validar que se subió un archivo
-  if (!req.files || !req.files.foto_evento) {
+  static async crearEvento(req, res) {
+    // Validar que se subió un archivo
+    if (!req.files || !req.files.foto_evento) {
       return res.status(400).json({ message: 'No se subió ninguna imagen' });
-  }
+    }
 
-  const uploadedFile = req.files.foto_evento;
-  const timestamp = Date.now();
-  const uniqueFileName = `${uploadedFile.name.split('.')[0]}_${timestamp}.${uploadedFile.name.split('.').pop()}`;
-  const uploadPath = path.join(__dirname, '../uploads/img/evento/', uniqueFileName);
-  const foto_eventoURL = `http://localhost:4000/uploads/img/evento/${uniqueFileName}`;
+    const uploadedFile = req.files.foto_evento;
+    const timestamp = Date.now();
+    const uniqueFileName = `${uploadedFile.name.split('.')[0]}_${timestamp}.${uploadedFile.name.split('.').pop()}`;
+    const uploadPath = path.join(__dirname, '../uploads/img/evento/', uniqueFileName);
+    const foto_eventoURL = `http://localhost:4000/uploads/img/evento/${uniqueFileName}`;
 
-  // Mover el archivo subido
-  uploadedFile.mv(uploadPath, async (err) => {
+    // Mover el archivo subido
+    uploadedFile.mv(uploadPath, async (err) => {
       if (err) {
-          return res.status(500).json({ message: 'Error al subir la imagen', error: err });
+        return res.status(500).json({ message: 'Error al subir la imagen', error: err });
       }
 
       try {
-          const { nombre_evento } = req.body;
+        const { nombre_evento, descripcion } = req.body; // Ahora se incluye 'descripcion'
 
-          if (!nombre_evento) {
-              return res.status(400).json({ message: 'Faltan datos requeridos' });
-          }
+        if (!nombre_evento || !descripcion) {
+          return res.status(400).json({ message: 'Faltan datos requeridos' });
+        }
 
-          const eventoData = {
-              nombre_evento,
-              foto_evento: `./uploads/img/evento/${uniqueFileName}`,
-              foto_eventoURL,
-          };
+        const eventoData = {
+          nombre_evento,
+          foto_evento: `./uploads/img/evento/${uniqueFileName}`,
+          foto_eventoURL,
+          descripcion // Agregar descripción
+        };
 
-          // Depurar los datos del evento antes de la creación
-          console.log('Datos del evento:', eventoData);
+        // Depurar los datos del evento antes de la creación
+        console.log('Datos del evento:', eventoData);
 
-          await Evento.createEvento(eventoData.nombre_evento, eventoData.foto_evento, eventoData.foto_eventoURL);
-          res.status(201).json({ message: 'Evento creado correctamente' });
+        await Evento.createEvento(eventoData.nombre_evento, eventoData.foto_evento, eventoData.foto_eventoURL, eventoData.descripcion);
+        res.status(201).json({ message: 'Evento creado correctamente' });
       } catch (error) {
-          console.error('Error al crear evento:', error);
-          res.status(500).json({ message: 'Error al crear evento', error });
+        console.error('Error al crear evento:', error);
+        res.status(500).json({ message: 'Error al crear evento', error });
       }
-  });
-}
+    });
+  }
 
-// Actualizar evento por ID
-static async actualizarEvento(req, res) {
-  const { id_evento } = req.params;
-  const { nombre_evento } = req.body;
+  // Actualizar evento por ID
+  static async actualizarEvento(req, res) {
+    const { id_evento } = req.params;
+    const { nombre_evento, descripcion } = req.body; // Ahora se incluye 'descripcion'
 
-  let foto_eventoURL = null;
-  let foto_evento = null;
+    let foto_eventoURL = null;
+    let foto_evento = null;
 
-  if (req.files && req.files.foto_evento) {
+    if (req.files && req.files.foto_evento) {
       const uploadedFile = req.files.foto_evento;
       const timestamp = Date.now();
       const uniqueFileName = `${timestamp}_${uploadedFile.name}`;
@@ -94,22 +95,21 @@ static async actualizarEvento(req, res) {
       await uploadedFile.mv(uploadPath);
       foto_eventoURL = `http://localhost:4000/uploads/img/evento/${uniqueFileName}`;
       foto_evento = `./uploads/img/evento/${uniqueFileName}`;
-  } else {
+    } else {
       // Mantener la foto actual
       const existingEvento = await Evento.getEventoById(id_evento);
       foto_evento = existingEvento.foto_evento;
       foto_eventoURL = existingEvento.foto_eventoURL;
-  }
+    }
 
-  try {
-      await Evento.updateEvento(id_evento, nombre_evento, foto_evento, foto_eventoURL);
+    try {
+      await Evento.updateEvento(id_evento, nombre_evento, foto_evento, foto_eventoURL, descripcion); // Se pasa descripción
       res.json({ message: 'Evento actualizado correctamente' });
-  } catch (error) {
+    } catch (error) {
       console.error('Error al actualizar evento:', error);
       res.status(500).json({ message: 'Error al actualizar evento', error });
+    }
   }
-}
-
 
   // Eliminar evento por ID
   static async eliminarEvento(req, res) {

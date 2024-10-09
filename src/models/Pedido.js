@@ -3,6 +3,7 @@ import { sequelize } from "../config/db.js";
 import Carrito from './Carrito.js';
 import Pago from './Pago.js';
 import Usuario from './Usuario.js';
+import HistorialPedido from './HistorialPedido.js'; // Asegúrate de tener este modelo
 
 class Pedido extends Model {
   static async obtenerPedidos() {
@@ -81,15 +82,24 @@ class Pedido extends Model {
     }
   }
 
-  static async cambiarEstadoPedido(idPedido, nuevoEstado) {
+  static async cambiarEstadoPedido(idPedido, nuevo_estado) {
     try {
+      // Cambia el estado del pedido
       await sequelize.query(
-        'CALL ActualizarEstadoPedido(:p_id_pedido, :nuevo_estado)', // Cambia aquí
+        'CALL ActualizarEstadoPedido(:p_id_pedido, :nuevo_estado)',
         {
-          replacements: { p_id_pedido: idPedido, nuevo_estado: nuevoEstado },
+          replacements: { p_id_pedido: idPedido, nuevo_estado },
           type: QueryTypes.RAW
         }
       );
+
+      // Registra el cambio en el historial
+      const fechaCambio = new Date();
+      await HistorialPedido.create({
+        id_pedido: idPedido,
+        estado_pedido: nuevo_estado,
+        fecha_cambio: fechaCambio,
+      });
     } catch (error) {
       console.error('Error en cambiarEstadoPedido (modelo):', error);
       throw error;

@@ -1,189 +1,86 @@
 import { DataTypes, Model, QueryTypes } from 'sequelize';
-import { sequelize } from "../config/db.js";
+import { sequelize } from '../config/db.js';
 
 class Carrito extends Model {
-
-  static async getAllCarritos() {
+  // Agregar producto al carrito
+  static async agregarProducto(documento, id_producto, cantidad) {
     try {
-      const carritos = await this.findAll();
-      return carritos;
-    } catch (error) {
-      console.error("Error al obtener todos los carritos:", error);
-      throw error;
-    }
-  }  
-
-  static async updateTotal(documento) {
-    try {
-      const carritoItems = await sequelize.query(
-        'SELECT SUM(p.precio_producto * c.cantidad) AS total FROM Carrito c JOIN Producto p ON c.id_producto = p.id_producto WHERE c.documento = :documento',
-        {
-          replacements: { documento },
-          type: QueryTypes.SELECT
-        }
-      );
-
-      const total = carritoItems[0].total || 0;
-
-      await sequelize.query(
-        'UPDATE Carrito SET total = :total WHERE documento = :documento',
-        {
-          replacements: { total, documento },
-          type: QueryTypes.UPDATE
-        }
-      );
-      return total;
-    } catch (error) {
-      console.error("Error al actualizar el total del carrito:", error);
-      throw error;
-    }
-  }
-
-  static async getCarritoByUsuarioId(documento) {
-    try {
-      const carrito = await sequelize.query(
-        'CALL ObtenerCarritoPorUsuarioId(:documento)',
-        {
-          replacements: { documento },
-          type: QueryTypes.RAW
-        }
-      );
-      console.log('Resultado de la consulta:', carrito);
-      return carrito[0];
-    } catch (error) {
-      console.error(`Unable to get carrito by usuario ID: ${error}`);
-      throw error;
-    }
-  }
-
-  static async addToCarrito(documento, id_producto, cantidad) {
-    try {
-      await sequelize.query(
-        'CALL AgregarAlCarrito(:documento, :id_producto, :cantidad)', 
-        {
-          replacements: { documento, id_producto, cantidad },
-          type: QueryTypes.RAW
-        }
-      );
-
-      await this.updateTotal(documento);
+      await sequelize.query('CALL agregar_producto_carrito(:p_documento, :p_id_producto, :p_cantidad)', {
+        replacements: { 
+          p_documento: documento, 
+          p_id_producto: id_producto, 
+          p_cantidad: cantidad 
+        },
+        type: QueryTypes.RAW
+      });
       return { message: 'Producto agregado al carrito exitosamente' };
     } catch (error) {
-      console.error(`Unable to add product to carrito: ${error}`);
-      throw error;
+      console.error('Unable to add product to cart:', error);
+      throw error; // Para que el controlador pueda manejar el error
     }
-  }  
+  }
 
-  static async updateQuantityInCarrito(id_carrito, cantidad) {
+  // Actualizar cantidad de producto en el carrito
+  static async actualizarCantidad(documento, id_producto, nueva_cantidad) {
     try {
       await sequelize.query(
-        'CALL ActualizarCantidadCarrito(:id_carrito, :cantidad)',
+        'CALL actualizar_cantidad_carrito(:documento, :id_producto, :nueva_cantidad)', 
         {
-          replacements: { id_carrito, cantidad },
+          replacements: { documento, id_producto, nueva_cantidad },
           type: QueryTypes.RAW
         }
       );
-
-      // Obtener el documento del usuario para actualizar el total
-      const carritoItem = await sequelize.query(
-        'SELECT documento FROM Carrito WHERE id_carrito = :id_carrito',
-        {
-          replacements: { id_carrito },
-          type: QueryTypes.SELECT
-        }
-      );
-
-      // Verificar si carritoItem es un array y contiene al menos un elemento
-      if (carritoItem.length === 0) {
-        throw new Error('Carrito no encontrado');
-      }
-
-      // Asegurarse de que carritoItem[0] existe
-      const documento = carritoItem[0]?.documento;
-      if (documento === undefined) {
-        throw new Error('Documento no encontrado en el carrito');
-      }
-
-      await this.updateTotal(documento);
-
       return { message: 'Cantidad actualizada exitosamente' };
     } catch (error) {
-      console.error(`Unable to update quantity in carrito: ${error}`);
+      console.error(`Unable to update product quantity: ${error}`);
       throw error;
     }
   }
 
-  static async deleteFromCarrito(id_carrito) {
+  // Eliminar producto del carrito
+  static async eliminarProducto(documento, id_producto) {
     try {
-      const carritoItem = await sequelize.query(
-        'SELECT documento FROM Carrito WHERE id_carrito = :id_carrito',
-        {
-          replacements: { id_carrito },
-          type: QueryTypes.SELECT
-        }
-      );
-
-      if (carritoItem.length === 0) {
-        throw new Error('Carrito no encontrado');
-      }
-
-      const documento = carritoItem[0]?.documento;
-      if (documento === undefined) {
-        throw new Error('Documento no encontrado en el carrito');
-      }
-
-      await sequelize.query(
-        'CALL EliminarDelCarrito(:id_carrito)',
-        {
-          replacements: { id_carrito },
-          type: QueryTypes.RAW
-        }
-      );
-
-      await this.updateTotal(documento);
-
+      await sequelize.query('CALL eliminar_producto_carrito(:documento, :id_producto)', {
+        replacements: { documento, id_producto },
+        type: QueryTypes.RAW
+      });
       return { message: 'Producto eliminado del carrito exitosamente' };
     } catch (error) {
-      console.error(`Unable to delete product from carrito: ${error}`);
+      console.error(`Unable to delete product from cart: ${error}`);
       throw error;
     }
   }
 
-  static async emptyCarrito(documento) {
+  // Ver contenido del carrito
+  static async verContenido(documento) {
     try {
-      await sequelize.query(
-        'CALL VaciarCarrito(:documento)',
-        {
-          replacements: { documento },
-          type: QueryTypes.RAW
-        }
-      );
-
-      return { message: 'Carrito vaciado exitosamente' };
+      const contenido = await sequelize.query('CALL ver_contenido_carrito(:documento)', {
+        replacements: { documento },
+        type: QueryTypes.RAW
+      });
+      return contenido;
     } catch (error) {
-      console.error(`Unable to empty carrito: ${error}`);
+      console.error(`Unable to view cart content: ${error}`);
       throw error;
     }
   }
 
-  static async checkAvailabilityInCarrito(id_producto, cantidad) {
+  // Limpiar carrito
+  static async limpiarCarrito(documento) {
     try {
-      const result = await sequelize.query(
-        'CALL VerificarDisponibilidadProducto(:id_producto, :cantidad)',
-        {
-          replacements: { id_producto, cantidad },
-          type: QueryTypes.RAW
-        }
-      );
-
-      return result;
+      await sequelize.query('CALL limpiar_carrito(:documento)', {
+        replacements: { documento },
+        type: QueryTypes.RAW
+      });
+      return { message: 'Carrito limpiado exitosamente' };
     } catch (error) {
-      console.error(`Unable to check product availability: ${error}`);
+      console.error(`Unable to clear cart: ${error}`);
       throw error;
     }
   }
 }
 
+// Definición del modelo Carrito
 Carrito.init({
   id_carrito: {
     type: DataTypes.INTEGER,
@@ -192,25 +89,27 @@ Carrito.init({
     allowNull: false
   },
   documento: {
-    type: DataTypes.STRING,
-    allowNull: false
+    type: DataTypes.INTEGER,
+    allowNull: false,
   },
   id_producto: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
   },
   cantidad: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
   },
-  total: {
-    type: DataTypes.FLOAT,
-    allowNull: true
+  fecha_agregado: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
   }
 }, {
   sequelize,
-  modelName: 'Carrito',
-  timestamps: false
+  tableName: 'Carrito',
+  timestamps: false,
+  underscored: false
 });
 
 export default Carrito;

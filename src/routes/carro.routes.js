@@ -1,27 +1,21 @@
-import { Router } from 'express';
-import { body } from 'express-validator';
+import express from 'express';
 import CarritoController from '../controllers/carro.controller.js';
 
-const router = Router();
+const router = express.Router();
 
-router.get('/api/carritos', CarritoController.getAllCarritos);
+// Ruta para agregar producto al carrito
+router.post('/api/carrito/', CarritoController.agregarProducto);
 
-router.get('/api/carritos/:documento', CarritoController.getCarritoByUsuarioId);
+// Ruta para actualizar la cantidad de un producto en el carrito
+router.put('/api/carrito/actualizar/:documento/:id_producto', CarritoController.actualizarCantidad);
 
-router.post('/api/carritos',
-    [
-        body('documento').isNumeric().withMessage('El documento debe ser numérico'),
-        body('id_producto').isNumeric().withMessage('El ID del producto debe ser numérico'),
-        body('cantidad').isInt({ gt: 0 }).withMessage('La cantidad debe ser un número mayor que 0')
-    ],
-    CarritoController.addToCarrito);
+// Ruta para eliminar un producto del carrito
+router.delete('/api/carrito/eliminar/:documento/:id_producto', CarritoController.eliminarProducto);
 
-router.put('/api/carritos/:id_carrito', CarritoController.updateQuantityInCarrito);
+// Ruta para ver el contenido del carrito
+router.get('/api/carrito/contenido/:documento', CarritoController.verContenido);
 
-router.delete('/api/carritos/:id_carrito', CarritoController.deleteFromCarrito);
-
-router.delete('/api/carritos/usuario/:documento', CarritoController.emptyCarrito);
-
-router.get('/api/carritos/disponibilidad/:id_producto', CarritoController.checkAvailabilityInCarrito);
+// Ruta para limpiar el carrito
+router.delete('/api/carrito/limpiar/:documento', CarritoController.limpiarCarrito);
 
 export default router;

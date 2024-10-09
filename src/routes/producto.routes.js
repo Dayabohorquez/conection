@@ -6,8 +6,8 @@ const router = express.Router();
 // Obtener todos los productos
 router.get('/api/productos', ProductoController.obtenerProductos);
 
-// Obtener producto por ID
-router.get('/api/productos/:idProducto', ProductoController.obtenerProductoPorId);
+// Obtener productos por tipo de flor
+router.get('/api/productos/:tipoFlorId', ProductoController.obtenerProductosPorTipoFlor);
 
 // Crear nuevo producto
 router.post('/api/productos', ProductoController.crearProducto);

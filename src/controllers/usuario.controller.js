@@ -93,6 +93,30 @@ class UsuarioController {
     }
   }
 
+  // Actualizar el rol de un usuario
+static async putRolUsuario(req, res) {
+  const { documento } = req.params;
+  const { rol_usuario } = req.body;
+
+  try {
+    console.log('Datos recibidos para actualizar rol:', req.body);
+    console.log('Buscando usuario con documento:', documento);
+    
+    // Aquí puedes agregar una validación para asegurarte de que el rol sea uno permitido
+    const rolesPermitidos = ['Vendedor', 'Domiciliario', 'Administrador', 'Cliente'];
+    if (!rolesPermitidos.includes(rol_usuario)) {
+      return res.status(400).json({ message: 'Rol no permitido.' });
+    }
+
+    const message = await Usuario.updateRolUsuario(documento, rol_usuario);
+    res.json(message);
+  } catch (error) {
+    console.error('Error al actualizar rol de usuario:', error);
+    res.status(500).json({ message: 'Error al actualizar rol de usuario', error: error.message || error });
+  }
+}
+
+
   // Comparar contraseñas para autenticación
   static async compararContrasena(req, res) {
     const { documento, contrasena_usuario } = req.body;

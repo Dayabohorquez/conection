@@ -15,16 +15,16 @@ class Producto extends Model {
     }
   }
 
-  // Obtener producto por ID
-  static async obtenerProductoPorId(id_producto) {
+  // Obtener productos por tipo de flor
+  static async obtenerProductosPorTipoFlor(tipoFlorId) {
     try {
-      const [producto] = await sequelize.query('CALL ObtenerProductoPorId(:id_producto)', {
-        replacements: { id_producto }, // Cambié aquí
-        type: QueryTypes.SELECT
+      const productos = await sequelize.query('CALL ObtenerProductosPorTipoFlor(:tipoFlorId)', {
+        replacements: { tipoFlorId },
+        type: QueryTypes.RAW
       });
-      return producto || null; // Devuelve null si no se encuentra el producto
+      return productos;
     } catch (error) {
-      console.error(`Unable to fetch producto by ID: ${error}`);
+      console.error(`Unable to fetch productos by tipo flor: ${error}`);
       throw error;
     }
   }

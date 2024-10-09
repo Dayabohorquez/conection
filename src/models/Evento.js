@@ -3,12 +3,12 @@ import { sequelize } from "../config/db.js";
 
 class Evento extends Model {
   // Método para crear un nuevo evento
-  static async createEvento(nombre_evento, foto_evento, foto_eventoURL) {
+  static async createEvento(nombre_evento, foto_evento, foto_eventoURL, descripcion) {
     try {
       await sequelize.query(
-        'CALL AddEvento(:nombre_evento, :foto_evento, :foto_eventoURL)',
+        'CALL AddEvento(:nombre_evento, :foto_evento, :foto_eventoURL, :descripcion)',
         {
-          replacements: { nombre_evento, foto_evento, foto_eventoURL },
+          replacements: { nombre_evento, foto_evento, foto_eventoURL, descripcion },
           type: QueryTypes.RAW
         }
       );
@@ -48,21 +48,21 @@ class Evento extends Model {
   }
 
   // Método para actualizar un evento por ID
-  static async updateEvento(id_evento, nombre_evento, foto_evento, foto_eventoURL) {
+  static async updateEvento(id_evento, nombre_evento, foto_evento, foto_eventoURL, descripcion) {
     try {
-        await sequelize.query(
-            'CALL UpdateEvento(:id_evento, :nombre_evento, :foto_evento, :foto_eventoURL)',
-            {
-                replacements: { id_evento, nombre_evento, foto_evento, foto_eventoURL },
-                type: QueryTypes.RAW,
-            }
-        );
-        return { message: 'Evento actualizado exitosamente' };
+      await sequelize.query(
+        'CALL UpdateEvento(:id_evento, :nombre_evento, :foto_evento, :foto_eventoURL, :descripcion)',
+        {
+          replacements: { id_evento, nombre_evento, foto_evento, foto_eventoURL, descripcion },
+          type: QueryTypes.RAW,
+        }
+      );
+      return { message: 'Evento actualizado exitosamente' };
     } catch (error) {
-        console.error(`Unable to update evento: ${error}`);
-        throw error;
+      console.error(`Unable to update evento: ${error}`);
+      throw error;
     }
-}
+  }
 
   // Método para eliminar un evento por ID
   static async deleteEvento(id_evento) {
@@ -99,6 +99,10 @@ Evento.init({
     allowNull: true,
   },
   foto_eventoURL: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  descripcion: {
     type: DataTypes.TEXT,
     allowNull: true,
   },

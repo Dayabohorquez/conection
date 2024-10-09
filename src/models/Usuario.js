@@ -75,6 +75,24 @@ class Usuario extends Model {
     )
   }
 
+  // Método para editar el rol de un usuario
+  static async updateRolUsuario(documento, nuevo_rol) {
+    try {
+      const sql = 'CALL EditarRolUsuario(:documento, :nuevo_rol)';
+      await sequelize.query(sql, {
+        replacements: { documento, nuevo_rol },
+        type: QueryTypes.RAW,
+      });
+      return { message: 'Rol actualizado exitosamente' };
+    } catch (error) {
+      if (error.original && error.original.sqlState === '45000') {
+        // Manejar el error específico del rol no permitido
+        throw new Error('Rol no permitido.');
+      }
+      console.error(`Unable to update rol usuario: ${error}`);
+      throw error;
+    }
+  }
   // Método para cambiar el estado de un usuario
   static async toggleUsuarioState(documento) {
     try {

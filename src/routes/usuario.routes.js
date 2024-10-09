@@ -18,6 +18,8 @@ router.post('/api/usuario', UsuarioController.postUsuario);
 // Actualizar un usuario existente
 router.put('/api/usuario/:documento', UsuarioController.putUsuario);
 
+router.put('/api/usuarios/:documento/rol', UsuarioController.putRolUsuario);
+
 // Cambiar el estado del usuario
 router.patch('/api/usuario/:documento/estado', UsuarioController.patchUsuarioEstado);
 

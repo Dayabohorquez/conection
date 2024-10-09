@@ -18,18 +18,18 @@ class ProductoController {
     }
   }
 
-  // Obtener producto por ID
-  static async obtenerProductoPorId(req, res) {
-    const { idProducto } = req.params;
+  // Obtener productos por tipo de flor
+  static async obtenerProductosPorTipoFlor(req, res) {
+    const { tipoFlorId } = req.params; // Asegúrate de que este sea el nombre correcto
     try {
-      const producto = await Producto.obtenerProductoPorId(idProducto);
-      if (!producto) {
-        return res.status(404).json({ message: 'Producto no encontrado' });
+      const productos = await Producto.obtenerProductosPorTipoFlor(tipoFlorId);
+      if (!productos.length) {
+        return res.status(404).json({ message: 'No se encontraron productos para este tipo de flor' });
       }
-      res.status(200).json(producto);
+      res.status(200).json(productos);
     } catch (error) {
-      console.error('Error al obtener producto por ID:', error);
-      res.status(500).json({ message: 'Error al obtener producto', error });
+      console.error('Error al obtener productos por tipo de flor:', error);
+      res.status(500).json({ message: 'Error al obtener productos', error });
     }
   }
 
