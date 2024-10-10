@@ -106,18 +106,19 @@ class Pedido extends Model {
     }
   }
 
-  static async obtenerHistorialComprasPorUsuarioId(documento) {
+  static async obtenerHistorialPedidosPorUsuarioId(documento) {
     try {
-      const historial = await sequelize.query('CALL ObtenerHistorialComprasPorUsuarioId(:documento)', {
-        replacements: { documento },
-        type: QueryTypes.RAW,
-      });
-      return historial;
+        const historial = await sequelize.query('CALL ObtenerHistorialPedidosPorUsuarioId(:documento)', {
+            replacements: { documento },
+            type: QueryTypes.RAW,
+        });
+        return historial;
     } catch (error) {
-      console.error(`Unable to find historial de compras: ${error}`);
-      throw error;
+        console.error(`Unable to find historial de pedidos: ${error}`);
+        throw error;
     }
-  }
+}
+
 }
 
 Pedido.init({

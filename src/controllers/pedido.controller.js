@@ -139,17 +139,18 @@ class PedidoController {
     }
   }
 
-  // Obtener historial de compras por ID de usuario
-  static async obtenerHistorialComprasPorUsuarioId(req, res) {
+  // Obtener historial de pedidos por ID de usuario
+  static async obtenerHistorialPedidosPorUsuarioId(req, res) {
     const { documento } = req.params;
     try {
-      const historial = await Pedido.obtenerHistorialComprasPorUsuarioId(documento);
+      const historial = await Pedido.obtenerHistorialPedidosPorUsuarioId(documento);
       res.json(historial);
     } catch (error) {
-      console.error('Error al obtener historial de compras:', error);
-      res.status(500).json({ message: 'Error al obtener historial de compras', error });
+      console.error('Error al obtener historial de pedidos:', error);
+      res.status(500).json({ message: 'Error al obtener historial de pedidos', error });
     }
   }
+
 }
 
 export default PedidoController;

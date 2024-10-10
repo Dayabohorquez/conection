@@ -45,11 +45,10 @@ class Usuario extends Model {
           type: QueryTypes.RAW
         }
       );
-      // Imprime el resultado para depuración
       console.log('Resultado de ObtenerUsuarioPorId:', result);
-      // Verifica si el resultado tiene elementos
       if (result.length > 0) {
-        return result[0]; // Devolvemos el primer elemento del resultado
+        // Crear una instancia del modelo Usuario a partir del resultado
+        return Usuario.build(result[0]); // Asegúrate de devolver una instancia
       }
       return null;
     } catch (error) {
@@ -72,27 +71,9 @@ class Usuario extends Model {
         },
         type: QueryTypes.RAW,
       }
-    )
+    );
   }
 
-  // Método para editar el rol de un usuario
-  static async updateRolUsuario(documento, nuevo_rol) {
-    try {
-      const sql = 'CALL EditarRolUsuario(:documento, :nuevo_rol)';
-      await sequelize.query(sql, {
-        replacements: { documento, nuevo_rol },
-        type: QueryTypes.RAW,
-      });
-      return { message: 'Rol actualizado exitosamente' };
-    } catch (error) {
-      if (error.original && error.original.sqlState === '45000') {
-        // Manejar el error específico del rol no permitido
-        throw new Error('Rol no permitido.');
-      }
-      console.error(`Unable to update rol usuario: ${error}`);
-      throw error;
-    }
-  }
   // Método para cambiar el estado de un usuario
   static async toggleUsuarioState(documento) {
     try {
@@ -106,6 +87,36 @@ class Usuario extends Model {
       throw error;
     }
   }
+
+  // Método para editar el rol de un usuario
+  static async updateRolUsuario(documento, nuevo_rol) {
+    try {
+      const sql = 'CALL EditarRolUsuario(:documento, :nuevo_rol)';
+      await sequelize.query(sql, {
+        replacements: { documento, nuevo_rol },
+        type: QueryTypes.RAW,
+      });
+      return { message: 'Rol actualizado exitosamente' };
+    } catch (error) {
+      if (error.original && error.original.sqlState === '45000') {
+        throw new Error('Rol no permitido.');
+      }
+      console.error(`Unable to update rol usuario: ${error}`);
+      throw error;
+    }
+  }
+
+  /// Método para actualizar la contraseña
+  static async updatePassword(documento, newPassword) {
+    await sequelize.query(
+      'UPDATE Usuario SET contrasena_usuario = :newPassword WHERE documento = :documento',
+      {
+        replacements: { newPassword, documento },
+        type: QueryTypes.RAW
+      }
+    );
+  }
+
 
   // Método para comparar contraseñas
   async comparar(contrasena_usuario) {

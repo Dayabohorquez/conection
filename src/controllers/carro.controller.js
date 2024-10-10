@@ -1,78 +1,121 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
 import Carrito from '../models/Carrito.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import Producto from '../models/Producto.js';
 
 class CarritoController {
-  // Agregar producto al carrito
-  static async agregarProducto(req, res) {
-    const { documento, id_producto, cantidad } = req.body;
-  
+  // Obtener todos los carritos
+  static async getAllCarritos(req, res) {
     try {
-      const result = await Carrito.agregarProducto(documento, id_producto, cantidad);
-      res.status(201).json(result);
+      const carritos = await Carrito.getAllCarritos();
+      if (carritos.length > 0) {
+        res.json(carritos);
+      } else {
+        res.status(404).json({ message: 'No hay carritos disponibles' });
+      }
     } catch (error) {
-      console.error('Error al agregar producto al carrito:', error);
-      res.status(500).json({ message: 'Error al agregar producto al carrito', error: error.message });
+      console.error("Error al obtener todos los carritos:", error);
+      res.status(500).json({ message: 'Error al obtener todos los carritos', error });
     }
-  }  
-  
-  // Actualizar cantidad de producto en el carrito
-  static async actualizarCantidad(req, res) {
-    const { documento, id_producto } = req.params;
-    const { nueva_cantidad } = req.body;
+  }
+
+  // Obtener el carrito de un usuario específico por documento
+  static async getCarritoByUsuarioId(req, res) {
+    const { documento } = req.params;
+    try {
+      const carrito = await Carrito.getCarritoByUsuarioId(documento);
+      if (carrito.length === 0) {
+        return res.status(404).json({ message: 'No se encontraron productos en el carrito.' });
+      }
+      res.json(carrito);
+    } catch (error) {
+      console.error('Error al obtener carrito por ID de usuario:', error);
+      res.status(500).json({ message: 'Error al obtener carrito por ID de usuario', error });
+    }
+  }
+
+  // Agregar un producto al carrito
+  static async addToCarrito(req, res) {
+    const { documento, id_producto, cantidad } = req.body;
+    console.log({ documento, id_producto, cantidad });
+
+    const documentoInt = parseInt(documento, 10);
+    const idProductoInt = parseInt(id_producto, 10);
+    const cantidadInt = parseInt(cantidad, 10);
+
+    if (isNaN(documentoInt) || isNaN(idProductoInt) || isNaN(cantidadInt)) {
+      return res.status(400).json({ message: 'Los valores deben ser numéricos.' });
+    }
 
     try {
-      if (!nueva_cantidad) {
-        return res.status(400).json({ message: 'Falta la nueva cantidad' });
+      const producto = await Producto.findByPk(idProductoInt);
+      if (!producto) {
+        return res.status(404).json({ message: 'Producto no encontrado' });
       }
 
-      const result = await Carrito.actualizarCantidad(documento, id_producto, nueva_cantidad);
-      res.json(result);
+      const available = await Carrito.checkAvailabilityInCarrito(idProductoInt, cantidadInt);
+      if (!available) {
+        return res.status(400).json({ message: 'Cantidad no disponible.' });
+      }
+
+      await Carrito.addToCarrito(documentoInt, idProductoInt, cantidadInt);
+      const subtotal = producto.precio_producto * cantidadInt;
+      res.status(201).json({ message: 'Producto agregado al carrito exitosamente', subtotal });
     } catch (error) {
-      console.error('Error al actualizar cantidad en el carrito:', error);
-      res.status(500).json({ message: 'Error al actualizar cantidad en el carrito', error: error.message });
+      console.error('Error al agregar producto al carrito:', error);
+      res.status(500).json({ message: 'Error al agregar producto al carrito', error });
     }
   }
 
-  // Eliminar producto del carrito
-  static async eliminarProducto(req, res) {
-    const { documento, id_producto } = req.params;
+  // Actualizar la cantidad de un producto en el carrito
+  static async updateQuantityInCarrito(req, res) {
+    const { id_carrito } = req.params;
+    const { cantidad } = req.body;
 
     try {
-      const result = await Carrito.eliminarProducto(documento, id_producto);
-      res.json(result);
+      const message = await Carrito.updateQuantityInCarrito(id_carrito, cantidad);
+      res.json({ message });
+    } catch (error) {
+      console.error('Error al actualizar cantidad en carrito:', error);
+      res.status(500).json({ message: 'Error al actualizar cantidad en carrito', error });
+    }
+  }
+
+  // Eliminar un producto del carrito
+  static async deleteFromCarrito(req, res) {
+    const { id_carrito } = req.params;
+
+    try {
+      const message = await Carrito.deleteFromCarrito(id_carrito);
+      res.json({ message });
     } catch (error) {
       console.error('Error al eliminar producto del carrito:', error);
-      res.status(500).json({ message: 'Error al eliminar producto del carrito', error: error.message });
+      res.status(500).json({ message: 'Error al eliminar producto del carrito', error });
     }
   }
 
-  // Ver contenido del carrito
-  static async verContenido(req, res) {
+  // Vaciar el carrito de un usuario
+  static async emptyCarrito(req, res) {
     const { documento } = req.params;
 
     try {
-      const contenido = await Carrito.verContenido(documento);
-      res.json(contenido);
+      const message = await Carrito.emptyCarrito(documento);
+      res.json({ message });
     } catch (error) {
-      console.error('Error al ver contenido del carrito:', error);
-      res.status(500).json({ message: 'Error al ver contenido del carrito', error: error.message });
+      console.error('Error al vaciar carrito:', error);
+      res.status(500).json({ message: 'Error al vaciar carrito', error });
     }
   }
 
-  // Limpiar carrito
-  static async limpiarCarrito(req, res) {
-    const { documento } = req.params;
+  // Verificar la disponibilidad de un producto
+  static async checkAvailabilityInCarrito(req, res) {
+    const { id_producto } = req.params;
+    const { cantidad } = req.body;
 
     try {
-      const result = await Carrito.limpiarCarrito(documento);
-      res.json(result);
+      const available = await Carrito.checkAvailabilityInCarrito(id_producto, cantidad);
+      res.json({ available });
     } catch (error) {
-      console.error('Error al limpiar carrito:', error);
-      res.status(500).json({ message: 'Error al limpiar carrito', error: error.message });
+      console.error('Error al verificar disponibilidad del producto:', error);
+      res.status(500).json({ message: 'Error al verificar disponibilidad del producto', error });
     }
   }
 }

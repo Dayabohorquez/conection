@@ -19,6 +19,6 @@ router.put('/api/pedidos/:id_pedido', PedidoController.actualizarPedido);
 router.patch('/api/pedidos/:id_pedido/estado', PedidoController.cambiarEstadoPedido);
 
 // Obtener historial de compras por ID de usuario
-router.get('/api/usuarios/:documento/historial', PedidoController.obtenerHistorialComprasPorUsuarioId);
+router.get('/api/usuarios/:documento/historial', PedidoController.obtenerHistorialPedidosPorUsuarioId);
 
 export default router;

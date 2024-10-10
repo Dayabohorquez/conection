@@ -25,6 +25,7 @@ class RegisterController {
 
       // Encriptar la contraseña
       const hashedPassword = await bcrypt.hash(contrasena_usuario, 10);
+      // console.log("Contraseña encriptada:", hashedPassword); // Opcional
 
       // Crear un nuevo usuario
       await Usuario.create({

@@ -47,40 +47,41 @@ class UsuarioController {
     }
   }
 
+  // Actualizar un usuario
   static async putUsuario(req, res) {
     const { documento } = req.params;
     const {
+      nombre_usuario,
+      apellido_usuario,
+      correo_electronico_usuario,
+      direccion,
+    } = req.body;
+
+    try {
+      console.log('Datos recibidos:', req.body);
+      console.log('Buscando usuario con documento:', documento);
+      const usuarioExistente = await Usuario.getUsuarioById(documento);
+
+      if (!usuarioExistente) {
+        return res.status(404).json({ message: 'Usuario no encontrado' });
+      }
+
+      const updatedData = {
         nombre_usuario,
         apellido_usuario,
         correo_electronico_usuario,
         direccion,
-    } = req.body;
+      };
 
-    try {
-        console.log('Datos recibidos:', req.body);
-        console.log('Buscando usuario con documento:', documento);
-        const usuarioExistente = await Usuario.getUsuarioById(documento);
+      console.log('Actualizando usuario con datos:', updatedData);
 
-        if (!usuarioExistente) {
-            return res.status(404).json({ message: 'Usuario no encontrado' });
-        }
-
-        const updatedData = {
-            nombre_usuario,
-            apellido_usuario,
-            correo_electronico_usuario,
-            direccion,
-        };
-
-        console.log('Actualizando usuario con datos:', updatedData);
-        
-        const message = await Usuario.updateUsuario(documento, updatedData);
-        res.json({ message });
+      const message = await Usuario.updateUsuario(documento, updatedData);
+      res.json({ message });
     } catch (error) {
-        console.error('Error al actualizar usuario:', error);
-        res.status(500).json({ message: 'Error al actualizar usuario', error: error.message || error });
+      console.error('Error al actualizar usuario:', error);
+      res.status(500).json({ message: 'Error al actualizar usuario', error: error.message || error });
     }
-}
+  }
 
   // Cambiar el estado del usuario
   static async patchUsuarioEstado(req, res) {
@@ -94,48 +95,89 @@ class UsuarioController {
   }
 
   // Actualizar el rol de un usuario
-static async putRolUsuario(req, res) {
-  const { documento } = req.params;
-  const { rol_usuario } = req.body;
+  static async putRolUsuario(req, res) {
+    const { documento } = req.params;
+    const { rol_usuario } = req.body;
 
-  try {
-    console.log('Datos recibidos para actualizar rol:', req.body);
-    console.log('Buscando usuario con documento:', documento);
-    
-    // Aquí puedes agregar una validación para asegurarte de que el rol sea uno permitido
-    const rolesPermitidos = ['Vendedor', 'Domiciliario', 'Administrador', 'Cliente'];
-    if (!rolesPermitidos.includes(rol_usuario)) {
-      return res.status(400).json({ message: 'Rol no permitido.' });
+    try {
+      console.log('Datos recibidos para actualizar rol:', req.body);
+      console.log('Buscando usuario con documento:', documento);
+
+      // Validar el rol permitido
+      const rolesPermitidos = ['Vendedor', 'Domiciliario', 'Administrador', 'Cliente'];
+      if (!rolesPermitidos.includes(rol_usuario)) {
+        return res.status(400).json({ message: 'Rol no permitido.' });
+      }
+
+      const message = await Usuario.updateRolUsuario(documento, rol_usuario);
+      res.json(message);
+    } catch (error) {
+      console.error('Error al actualizar rol de usuario:', error);
+      res.status(500).json({ message: 'Error al actualizar rol de usuario', error: error.message || error });
+    }
+  }
+
+  // Cambiar la contraseña
+  static async changePassword(req, res) {
+    const { documento } = req.params;
+    const { oldPassword, newPassword } = req.body;
+
+    // Validar que ambas contraseñas se proporcionen
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ message: 'Por favor, proporciona ambas contraseñas.' });
     }
 
-    const message = await Usuario.updateRolUsuario(documento, rol_usuario);
-    res.json(message);
-  } catch (error) {
-    console.error('Error al actualizar rol de usuario:', error);
-    res.status(500).json({ message: 'Error al actualizar rol de usuario', error: error.message || error });
+    try {
+      // Obtener el usuario por documento
+      const usuario = await Usuario.getUsuarioById(documento);
+      if (!usuario) {
+        return res.status(404).json({ message: 'Usuario no encontrado' });
+      }
+
+      // Comparar la contraseña antigua
+      const esValido = await bcrypt.compare(oldPassword, usuario.contrasena_usuario);
+      if (!esValido) {
+        return res.status(400).json({ message: 'Contraseña antigua incorrecta' });
+      }
+
+      // Hashear la nueva contraseña
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+      // Actualizar la contraseña en la base de datos
+      await Usuario.updatePassword(documento, hashedNewPassword);
+
+      res.json({ message: 'Contraseña cambiada exitosamente' });
+    } catch (error) {
+      return res.status(500).json({ message: 'Error al cambiar la contraseña', error });
+    }
   }
-}
 
-
-  // Comparar contraseñas para autenticación
+  // Comparar contraseña
   static async compararContrasena(req, res) {
+    console.log('Datos recibidos:', req.body); // Agregar esta línea
     const { documento, contrasena_usuario } = req.body;
+
+    if (!documento || !contrasena_usuario) {
+      return res.status(400).json({ message: 'El documento y la contraseña son requeridos.' });
+    }
+
     try {
       const usuario = await Usuario.getUsuarioById(documento);
       if (!usuario) {
         return res.status(404).json({ message: 'Usuario no encontrado' });
       }
 
-      const esValido = await usuario.comparar(contrasena_usuario);
+      const esValido = await bcrypt.compare(contrasena_usuario, usuario.contrasena_usuario);
       if (esValido) {
-        res.json({ message: 'Contraseña correcta' });
+        return res.json({ message: 'Contraseña correcta' });
       } else {
-        res.status(401).json({ message: 'Contraseña incorrecta' });
+        return res.status(401).json({ message: 'Contraseña incorrecta' });
       }
     } catch (error) {
-      res.status(500).json({ message: 'Error al comparar contraseñas', error });
+      return res.status(500).json({ message: 'Error al comparar contraseñas', error });
     }
   }
+
 }
 
 export default UsuarioController;
