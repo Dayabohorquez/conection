@@ -1,6 +1,6 @@
-import Producto from "../models/Producto.js";
 import path from 'path';
 import { fileURLToPath } from 'url';
+import Producto from "../models/Producto.js";
 
 // Obtener el nombre del archivo actual y el directorio
 const __filename = fileURLToPath(import.meta.url);
@@ -18,18 +18,24 @@ class ProductoController {
     }
   }
 
+<<<<<<< HEAD
   // Obtener productos por tipo de flor
   static async obtenerProductosPorTipoFlor(req, res) {
     const { tipoFlorId } = req.params;
+=======
+  // Obtener producto por ID
+  static async obtenerProductoPorId(req, res) {
+    const { idProducto } = req.params;
+>>>>>>> de1ab07aebece760b71bf4c7d487f6f7fbe4ce48
     try {
-      const productos = await Producto.obtenerProductosPorTipoFlor(tipoFlorId);
-      if (!productos.length) {
-        return res.status(404).json({ message: 'No se encontraron productos para este tipo de flor' });
+      const producto = await Producto.obtenerProductoPorId(idProducto);
+      if (!producto) {
+        return res.status(404).json({ message: 'Producto no encontrado' });
       }
-      res.status(200).json(productos);
+      res.status(200).json(producto);
     } catch (error) {
-      console.error('Error al obtener productos por tipo de flor:', error);
-      res.status(500).json({ message: 'Error al obtener productos', error });
+      console.error('Error al obtener producto por ID:', error);
+      res.status(500).json({ message: 'Error al obtener producto', error });
     }
   }
 
@@ -49,6 +55,9 @@ class ProductoController {
   }
 
   static async crearProducto(req, res) {
+    // Depurar `req.files` para verificar si se envió el archivo
+    console.log('Archivos subidos:', req.files);
+
     // Validar que se subió un archivo
     if (!req.files || !req.files.foto_Producto) {
       return res.status(400).json({ message: 'No se subió ninguna imagen' });
@@ -84,6 +93,7 @@ class ProductoController {
           return res.status(400).json({ message: 'Faltan datos requeridos' });
         }
 
+<<<<<<< HEAD
         const productoData = {
           codigo_producto: parseInt(req.body.codigo_producto),
           nombre_producto: req.body.nombre_producto,
@@ -106,8 +116,48 @@ class ProductoController {
         console.error('Error al crear producto:', error);
         res.status(500).json({ message: 'Error al crear producto', error });
       }
+=======
+        try {
+            // Verificar que todos los campos requeridos estén presentes
+            const {
+                codigo_producto,
+                nombre_producto,
+                descripcion_producto,
+                precio_producto,
+                cantidad_disponible,
+                id_tipo_flor,
+                id_evento,
+                id_fecha_especial
+            } = req.body;
+
+            if (!codigo_producto || !nombre_producto || !descripcion_producto || !precio_producto ||
+                !cantidad_disponible || !id_tipo_flor || !id_evento || !id_fecha_especial) {
+                return res.status(400).json({ message: 'Faltan datos requeridos' });
+            }
+
+            const productoData = {
+              codigo_producto: parseInt(codigo_producto), // Debe ser un número entero
+              nombre_producto,
+              foto_Producto: `./uploads/img/producto/${uniqueFileName}`,
+              foto_ProductoURL,
+              descripcion_producto,
+              precio_producto: parseFloat(precio_producto), // Debe ser un número decimal
+              cantidad_disponible: parseInt(cantidad_disponible), // Debe ser un número entero
+              id_tipo_flor: parseInt(id_tipo_flor), // Debe ser un número entero
+              id_evento: parseInt(id_evento), // Debe ser un número entero
+              id_fecha_especial: parseInt(id_fecha_especial)
+          };
+
+            await Producto.crearProducto(productoData);
+            res.status(201).json({ message: 'Producto creado correctamente' });
+        } catch (error) {
+            console.error('Error al crear producto:', error);
+            res.status(500).json({ message: 'Error al crear producto', error });
+        }
+>>>>>>> de1ab07aebece760b71bf4c7d487f6f7fbe4ce48
     });
   }
+
 
   static async actualizarProducto(req, res) {
     const { idProducto } = req.params;
@@ -121,7 +171,12 @@ class ProductoController {
       id_tipo_flor,
       id_evento,
       id_fecha_especial,
+<<<<<<< HEAD
     } = req.body;
+=======
+      foto_Producto, // Aquí puedes manejar la foto
+  } = req.body;
+>>>>>>> de1ab07aebece760b71bf4c7d487f6f7fbe4ce48
 
     let foto_ProductoURL = null;
     let foto_ProductoPath = null;
@@ -153,8 +208,13 @@ class ProductoController {
       cantidad_disponible,
       id_tipo_flor,
       id_evento,
+<<<<<<< HEAD
       id_fecha_especial 
     };
+=======
+      id_fecha_especial,
+  };
+>>>>>>> de1ab07aebece760b71bf4c7d487f6f7fbe4ce48
 
     try {
       await Producto.actualizarProducto(updatedData);
