@@ -7,13 +7,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 class PedidoController {
+  // Obtener todos los pedidos
   static async obtenerPedidos(req, res) {
     try {
-      const pedidos = await Pedido.obtenerPedidos(); // Llama al método del modelo
+      const pedidos = await Pedido.obtenerPedidos();
       if (!pedidos || pedidos.length === 0) {
         return res.status(404).json({ message: 'No se encontraron pedidos' });
       }
-      res.status(200).json(pedidos); // Envía el array directamente
+      res.status(200).json(pedidos);
     } catch (error) {
       console.error('Error al obtener pedidos:', error);
       res.status(500).json({ message: 'Error al obtener pedidos', error: error.message });
@@ -60,7 +61,7 @@ class PedidoController {
         foto_PedidoURL,
         documento,
         pago_id,
-        id_carrito // Asegúrate de que este valor se está pasando correctamente
+        id_carrito
       };
 
       console.log('PedidoData:', pedidoData);
@@ -101,8 +102,8 @@ class PedidoController {
     const pedidoData = {
       fecha_pedido,
       total_pagado,
-      foto_Pedido: foto_Pedido ? `./uploads/img/pedido/${uniqueFileName}` : pedidoActual.foto_Pedido, // Mantiene la foto existente
-      foto_PedidoURL, // Actualiza la URL si se subió una nueva
+      foto_Pedido: foto_Pedido ? `./uploads/img/pedido/${uniqueFileName}` : pedidoActual.foto_Pedido,
+      foto_PedidoURL,
       documento,
       pago_id
     };
@@ -116,6 +117,7 @@ class PedidoController {
     }
   }
 
+  // Cambiar el estado de un pedido
   static async cambiarEstadoPedido(req, res) {
     const { id_pedido } = req.params;
     const { nuevo_estado } = req.body;

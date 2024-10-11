@@ -51,11 +51,13 @@ class CarritoController {
         return res.status(404).json({ message: 'Producto no encontrado' });
       }
 
-      const available = await Carrito.checkAvailabilityInCarrito(idProductoInt, cantidadInt);
-      if (!available) {
+      // Verificar la disponibilidad
+      const availabilityCheck = await Carrito.checkAvailabilityInCarrito(idProductoInt, cantidadInt);
+      if (!availabilityCheck || availabilityCheck.length === 0) {
         return res.status(400).json({ message: 'Cantidad no disponible.' });
       }
 
+      // Agregar al carrito
       await Carrito.addToCarrito(documentoInt, idProductoInt, cantidadInt);
       const subtotal = producto.precio_producto * cantidadInt;
       res.status(201).json({ message: 'Producto agregado al carrito exitosamente', subtotal });
@@ -93,15 +95,17 @@ class CarritoController {
   }
 
   // Vaciar el carrito de un usuario
-  static async emptyCarrito(req, res) {
+  static async vaciarCarrito(req, res) {
     const { documento } = req.params;
+    const { id_carrito } = req.body; // Asegúrate de que id_carrito venga en el cuerpo de la solicitud
 
     try {
-      const message = await Carrito.emptyCarrito(documento);
+      // Llama al método para vaciar el carrito
+      const message = await Carrito.vaciarCarrito(id_carrito);
       res.json({ message });
     } catch (error) {
       console.error('Error al vaciar carrito:', error);
-      res.status(500).json({ message: 'Error al vaciar carrito', error });
+      res.status(500).json({ message: 'Error al vaciar carrito', error: error.message });
     }
   }
 

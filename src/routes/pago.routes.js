@@ -15,6 +15,9 @@ router.get('/api/pago/:id', PagoController.getPagoById);
 // Actualizar un pago existente
 router.put('/api/pago/:id', PagoController.updatePago);
 
+router.put('/api/pagos/:id/estado', PagoController.actualizarEstadoPago);
+
+
 // Eliminar un pago
 router.delete('/api/pago/:id', PagoController.deletePago);
 

@@ -10,7 +10,7 @@ router.get('/api/pedidos', PedidoController.obtenerPedidos);
 router.get('/api/pedidos/:id_pedido', PedidoController.obtenerPedidoPorId);
 
 // Crear un nuevo pedido
-router.post('/api/pedidos', PedidoController.crearPedido);
+router.post('/api/pedido', PedidoController.crearPedido);
 
 // Actualizar un pedido existente
 router.put('/api/pedidos/:id_pedido', PedidoController.actualizarPedido);

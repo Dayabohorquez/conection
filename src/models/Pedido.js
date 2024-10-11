@@ -3,7 +3,7 @@ import { sequelize } from "../config/db.js";
 import Carrito from './Carrito.js';
 import Pago from './Pago.js';
 import Usuario from './Usuario.js';
-import HistorialPedido from './HistorialPedido.js'; // Asegúrate de tener este modelo
+import HistorialPedido from './HistorialPedido.js';
 
 class Pedido extends Model {
   static async obtenerPedidos() {
@@ -30,45 +30,50 @@ class Pedido extends Model {
   }
 
   static async crearPedido(pedidoData) {
-    const { fecha_pedido, total_pagado, foto_Pedido, foto_PedidoURL, documento, pago_id, id_carrito } = pedidoData;
+    const { fecha_pedido, total_pagado, documento, pago_id, id_carrito } = pedidoData;
 
     try {
-      await sequelize.query(
-        'CALL CrearPedido(:fecha_pedido, :total_pagado, :foto_Pedido, :foto_PedidoURL, :documento, :pago_id, :id_carrito)',
+      const result = await sequelize.query(
+        'CALL CrearPedido(:fecha_pedido, :total_pagado, :documento, :pago_id, :id_carrito)',
         {
           replacements: {
             fecha_pedido,
             total_pagado,
-            foto_Pedido,
-            foto_PedidoURL,
             documento,
             pago_id,
-            id_carrito
+            id_carrito,
           },
-          type: sequelize.QueryTypes.RAW
+          type: QueryTypes.RAW,
         }
       );
 
-      return;
+      return result; // Asegúrate de que esto sea lo que necesitas
     } catch (error) {
       console.error('Error en crearPedido (modelo):', error);
       throw error;
     }
   }
 
+  static async obtenerHistorialPedidosPorUsuarioId(documento) {
+    try {
+      const historial = await sequelize.query('CALL ObtenerHistorialPedidosPorUsuarioId(:documento)', {
+        replacements: { documento },
+        type: QueryTypes.RAW,
+      });
+      return historial;
+    } catch (error) {
+      console.error(`Unable to find historial de pedidos: ${error}`);
+      throw error;
+    }
+  }
+
   static async actualizarPedido(idPedido, updatedData) {
     try {
-      // Imprime los datos para depuración
-      console.log('ID Pedido:', idPedido);
-      console.log('Datos a actualizar:', updatedData);
-
-      await sequelize.query('CALL ActualizarPedido(:p_id_pedido, :p_fecha_pedido, :p_total_pagado, :p_foto_Pedido, :p_foto_PedidoURL, :p_documento, :p_pago_id)', {
+      await sequelize.query('CALL ActualizarPedido(:p_id_pedido, :p_fecha_pedido, :p_total_pagado, :p_documento, :p_pago_id)', {
         replacements: {
           p_id_pedido: idPedido,
           p_fecha_pedido: updatedData.fecha_pedido,
           p_total_pagado: updatedData.total_pagado,
-          p_foto_Pedido: updatedData.foto_Pedido,
-          p_foto_PedidoURL: updatedData.foto_PedidoURL,
           p_documento: updatedData.documento,
           p_pago_id: updatedData.pago_id
         },
@@ -84,7 +89,6 @@ class Pedido extends Model {
 
   static async cambiarEstadoPedido(idPedido, nuevo_estado) {
     try {
-      // Cambia el estado del pedido
       await sequelize.query(
         'CALL ActualizarEstadoPedido(:p_id_pedido, :nuevo_estado)',
         {
@@ -93,7 +97,6 @@ class Pedido extends Model {
         }
       );
 
-      // Registra el cambio en el historial
       const fechaCambio = new Date();
       await HistorialPedido.create({
         id_pedido: idPedido,
@@ -105,20 +108,6 @@ class Pedido extends Model {
       throw error;
     }
   }
-
-  static async obtenerHistorialPedidosPorUsuarioId(documento) {
-    try {
-        const historial = await sequelize.query('CALL ObtenerHistorialPedidosPorUsuarioId(:documento)', {
-            replacements: { documento },
-            type: QueryTypes.RAW,
-        });
-        return historial;
-    } catch (error) {
-        console.error(`Unable to find historial de pedidos: ${error}`);
-        throw error;
-    }
-}
-
 }
 
 Pedido.init({

@@ -7,7 +7,10 @@ const router = express.Router();
 router.get('/api/productos', ProductoController.obtenerProductos);
 
 // Obtener productos por tipo de flor
-router.get('/api/productos/:tipoFlorId', ProductoController.obtenerProductosPorTipoFlor);
+router.get('/api/productos/tipoFlor/:tipoFlorId', ProductoController.obtenerProductosPorTipoFlor);
+
+// Obtener productos por fecha especial
+router.get('/api/productos/fechaEspecial/:fechaEspecialId', ProductoController.obtenerProductosPorFechaEspecial);
 
 // Crear nuevo producto
 router.post('/api/productos', ProductoController.crearProducto);

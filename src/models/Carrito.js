@@ -5,32 +5,10 @@ class Carrito extends Model {
 
   static async getAllCarritos() {
     try {
-      return await Carrito.findAll();
+      const carritos = await Carrito.findAll();
+      return carritos;
     } catch (error) {
       console.error("Error al obtener todos los carritos:", error);
-      throw error;
-    }
-  }
-
-  static async getCarritoByUsuarioId(documento) {
-    try {
-      const carrito = await sequelize.query(
-        'CALL ObtenerCarritoPorUsuarioId(:documento)',
-        {
-          replacements: { documento },
-          type: QueryTypes.RAW
-        }
-      );
-
-      // Verifica si carrito es undefined o no tiene resultados
-      if (!carrito || carrito.length === 0 || carrito[0].length === 0) {
-        console.warn(`No se encontró carrito para el documento: ${documento}`);
-        return []; // O maneja este caso como prefieras
-      }
-
-      return carrito[0]; // Devuelve el primer conjunto de resultados
-    } catch (error) {
-      console.error(`Unable to get carrito by usuario ID: ${error}`);
       throw error;
     }
   }
@@ -61,21 +39,40 @@ class Carrito extends Model {
     }
   }
 
+  static async getCarritoByUsuarioId(documento) {
+    try {
+      const carrito = await sequelize.query(
+        'CALL ObtenerCarritoPorUsuarioId(:documento)',
+        {
+          replacements: { documento },
+          type: QueryTypes.SELECT
+        }
+      );
+      return carrito[0]; // Asegúrate de que esto devuelva todas las filas.
+    } catch (error) {
+      console.error(`Unable to get carrito by usuario ID: ${error}`);
+      throw error;
+    }
+  }
+
   static async addToCarrito(documento, id_producto, cantidad) {
     try {
-      const existingItem = await Carrito.findOne({ where: { documento, id_producto } });
+      console.log('Parámetros para la consulta:', { documento, id_producto, cantidad });
 
-      if (existingItem) {
-        existingItem.cantidad += cantidad;
-        await existingItem.save();
-      } else {
-        await Carrito.create({ documento, id_producto, cantidad });
-      }
-
-      await this.updateTotal(documento);
+      await sequelize.query(
+        'CALL AgregarAlCarrito(:documento, :id_producto, :cantidad)',
+        {
+          replacements: {
+            documento,
+            id_producto,
+            cantidad
+          },
+          type: QueryTypes.RAW
+        }
+      );
       return { message: 'Producto agregado al carrito exitosamente' };
     } catch (error) {
-      console.error(`Error al agregar producto al carrito: ${error}`);
+      console.error(`Unable to add product to carrito: ${error}`);
       throw error;
     }
   }
@@ -90,7 +87,6 @@ class Carrito extends Model {
         }
       );
 
-      // Obtener el documento del usuario para actualizar el total
       const carritoItem = await sequelize.query(
         'SELECT documento FROM Carrito WHERE id_carrito = :id_carrito',
         {
@@ -99,12 +95,10 @@ class Carrito extends Model {
         }
       );
 
-      // Verificar si carritoItem es un array y contiene al menos un elemento
       if (carritoItem.length === 0) {
         throw new Error('Carrito no encontrado');
       }
 
-      // Asegurarse de que carritoItem[0] existe
       const documento = carritoItem[0]?.documento;
       if (documento === undefined) {
         throw new Error('Documento no encontrado en el carrito');
@@ -155,19 +149,19 @@ class Carrito extends Model {
     }
   }
 
-  static async emptyCarrito(documento) {
+  // Método para vaciar el carrito basado en el id_carrito
+  static async vaciarCarrito(id_carrito) {
     try {
       await sequelize.query(
-        'CALL VaciarCarrito(:documento)',
+        'CALL VaciarCarrito(:id_carrito)',
         {
-          replacements: { documento },
+          replacements: { id_carrito },
           type: QueryTypes.RAW
         }
       );
-
       return { message: 'Carrito vaciado exitosamente' };
     } catch (error) {
-      console.error(`Unable to empty carrito: ${error}`);
+      console.error(`Error al vaciar carrito: ${error}`);
       throw error;
     }
   }
