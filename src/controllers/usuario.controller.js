@@ -1,5 +1,6 @@
 import Usuario from "../models/Usuario.js";
 import bcrypt from "bcrypt";
+import { sendEmail } from '../utils/email.js'; // Asegúrate de importar la función de envío de correo
 
 class UsuarioController {
   // Obtener todos los usuarios
@@ -154,7 +155,7 @@ class UsuarioController {
 
   // Comparar contraseña
   static async compararContrasena(req, res) {
-    console.log('Datos recibidos:', req.body); // Agregar esta línea
+    console.log('Datos recibidos:', req.body);
     const { documento, contrasena_usuario } = req.body;
 
     if (!documento || !contrasena_usuario) {
@@ -178,6 +179,68 @@ class UsuarioController {
     }
   }
 
+  // Solicitar restablecimiento de contraseña
+  static async solicitarRestablecimientoContrasena(req, res) {
+    const { correo_electronico_usuario } = req.body;
+
+    if (!correo_electronico_usuario) {
+      return res.status(400).json({ message: 'El correo electrónico es requerido.' });
+    }
+
+    try {
+      const usuario = await Usuario.findOne({ where: { correo_electronico_usuario } });
+
+      if (!usuario) {
+        return res.status(404).json({ message: 'Correo electrónico no encontrado.' });
+      }
+
+      const tokenData = await Usuario.solicitarRestablecimientoContrasena(correo_electronico_usuario);
+
+      // Asegúrate de que `tokenData` tiene la estructura correcta
+      const token = tokenData.token; // Cambia según tu lógica
+
+      // Enviar correo utilizando la función sendEmail
+      await sendEmail(
+        correo_electronico_usuario,
+        'Restablecimiento de contraseña',
+        `Aquí está tu token de restablecimiento: ${tokenData.token}`
+      );
+
+      return res.status(200).json({ message: 'Se ha enviado un correo para restablecer la contraseña.' });
+    } catch (error) {
+      console.error('Error al solicitar restablecimiento de contraseña:', error);
+      return res.status(500).json({ message: 'Error al solicitar restablecimiento de contraseña', error });
+    }
+  }
+
+  // Validar token
+  static async validarToken(req, res) {
+    const { token } = req.params;
+
+    try {
+      const response = await Usuario.validarToken(token);
+      res.json(response);
+    } catch (error) {
+      res.status(500).json({ message: 'Error al validar el token', error });
+    }
+  }
+
+  // Actualizar contraseña
+  static async actualizarContrasena(req, res) {
+    const { token } = req.params;
+    const { nueva_contrasena } = req.body;
+
+    if (!nueva_contrasena) {
+      return res.status(400).json({ message: 'La nueva contraseña es requerida.' });
+    }
+
+    try {
+      const response = await Usuario.actualizarContrasena(token, nueva_contrasena);
+      res.json(response);
+    } catch (error) {
+      res.status(500).json({ message: 'Error al actualizar la contraseña', error });
+    }
+  }
 }
 
 export default UsuarioController;

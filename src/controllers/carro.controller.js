@@ -96,18 +96,18 @@ class CarritoController {
 
   // Vaciar el carrito de un usuario
   static async vaciarCarrito(req, res) {
-    const { documento } = req.params;
-    const { id_carrito } = req.body; // Asegúrate de que id_carrito venga en el cuerpo de la solicitud
+    const { documento } = req.params; // Obtiene el documento de los parámetros de la URL
 
     try {
       // Llama al método para vaciar el carrito
-      const message = await Carrito.vaciarCarrito(id_carrito);
+      const message = await Carrito.vaciarCarrito(documento);
       res.json({ message });
     } catch (error) {
       console.error('Error al vaciar carrito:', error);
       res.status(500).json({ message: 'Error al vaciar carrito', error: error.message });
     }
   }
+
 
   // Verificar la disponibilidad de un producto
   static async checkAvailabilityInCarrito(req, res) {

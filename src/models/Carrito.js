@@ -149,17 +149,18 @@ class Carrito extends Model {
     }
   }
 
-  // Método para vaciar el carrito basado en el id_carrito
-  static async vaciarCarrito(id_carrito) {
+  static async vaciarCarrito(documento) {
     try {
-      await sequelize.query(
-        'CALL VaciarCarrito(:id_carrito)',
+      const result = await sequelize.query(
+        'CALL VaciarCarrito(:documento)',
         {
-          replacements: { id_carrito },
+          replacements: { documento },
           type: QueryTypes.RAW
         }
       );
-      return { message: 'Carrito vaciado exitosamente' };
+
+      // Asegúrate de que el resultado sea válido, aquí puedes manejar el resultado como necesites
+      return 'Carrito vaciado exitosamente';
     } catch (error) {
       console.error(`Error al vaciar carrito: ${error}`);
       throw error;

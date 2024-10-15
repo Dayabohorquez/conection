@@ -29,6 +29,15 @@ router.patch('/api/usuarios/:documento/cambiar-contrasena', UsuarioController.ch
 // Comparar la contraseña del usuario
 router.post('/api/usuario/comparar-contrasena', UsuarioController.compararContrasena);
 
+// Solicitar restablecimiento de contraseña
+router.post('/api/usuario/solicitar-restablecimiento', UsuarioController.solicitarRestablecimientoContrasena);
+
+// Validar token de recuperación
+router.get('/api/usuario/validar-token/:token', UsuarioController.validarToken);
+
+// Actualizar la contraseña usando el token
+router.patch('/api/usuario/actualizar-contrasena/:token', UsuarioController.actualizarContrasena);
+
 // Registro de usuario
 router.post('/api/register', RegisterController.register);
 

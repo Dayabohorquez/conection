@@ -6,12 +6,12 @@ class RegisterController {
     try {
       const { documento, nombre_usuario, apellido_usuario, correo_electronico_usuario, contrasena_usuario } = req.body;
 
-      // Verificar que todos los campos requeridos están presentes
+      // Validación de entrada
       if (!documento || !nombre_usuario || !apellido_usuario || !correo_electronico_usuario || !contrasena_usuario) {
         return res.status(400).json({ message: "Todos los campos son requeridos." });
       }
 
-      // Buscar si el correo electrónico o el documento ya están registrados
+      // Verificar si el correo o el documento ya existen
       const existingEmail = await Usuario.findOne({ where: { correo_electronico_usuario } });
       const existingDocumento = await Usuario.findOne({ where: { documento } });
 
@@ -25,7 +25,6 @@ class RegisterController {
 
       // Encriptar la contraseña
       const hashedPassword = await bcrypt.hash(contrasena_usuario, 10);
-      // console.log("Contraseña encriptada:", hashedPassword); // Opcional
 
       // Crear un nuevo usuario
       await Usuario.create({
@@ -37,7 +36,6 @@ class RegisterController {
         estado_usuario: true
       });
 
-      // Responder con éxito
       return res.status(201).json({ message: "Usuario registrado exitosamente" });
 
     } catch (error) {

@@ -47,8 +47,7 @@ class Usuario extends Model {
       );
       console.log('Resultado de ObtenerUsuarioPorId:', result);
       if (result.length > 0) {
-        // Crear una instancia del modelo Usuario a partir del resultado
-        return Usuario.build(result[0]); // Asegúrate de devolver una instancia
+        return Usuario.build(result[0]);
       }
       return null;
     } catch (error) {
@@ -106,17 +105,17 @@ class Usuario extends Model {
     }
   }
 
-  /// Método para actualizar la contraseña
+  // Método para actualizar la contraseña
   static async updatePassword(documento, newPassword) {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
     await sequelize.query(
       'UPDATE Usuario SET contrasena_usuario = :newPassword WHERE documento = :documento',
       {
-        replacements: { newPassword, documento },
+        replacements: { newPassword: hashedPassword, documento },
         type: QueryTypes.RAW
       }
     );
   }
-
 
   // Método para comparar contraseñas
   async comparar(contrasena_usuario) {
@@ -124,6 +123,49 @@ class Usuario extends Model {
       return await bcrypt.compare(contrasena_usuario, this.contrasena_usuario);
     } catch (error) {
       console.error("Error al comparar las contraseñas:", error);
+      throw error;
+    }
+  }
+
+  // Método para solicitar restablecimiento de contraseña
+  static async solicitarRestablecimientoContrasena(correo) {
+    try {
+      await sequelize.query('CALL SolicitarRestablecimientoContrasena(:correo)', {
+        replacements: { correo },
+        type: QueryTypes.RAW
+      });
+      return { message: 'Si el correo existe, se ha enviado un token de recuperación.' };
+    } catch (error) {
+      console.error(`Error en SolicitarRestablecimientoContrasena: ${error}`);
+      throw error;
+    }
+  }
+
+  // Método para validar el token
+  static async validarToken(token) {
+    try {
+      const result = await sequelize.query('CALL ValidarToken(:token)', {
+        replacements: { token },
+        type: QueryTypes.RAW
+      });
+      return result[0];  // Devolver el mensaje y el documento
+    } catch (error) {
+      console.error(`Error en ValidarToken: ${error}`);
+      throw error;
+    }
+  }
+
+  // Método para actualizar la contraseña usando el token
+  static async actualizarContrasena(token, nueva_contrasena) {
+    try {
+      const hashedPassword = await bcrypt.hash(nueva_contrasena, 10);
+      const result = await sequelize.query('CALL ActualizarContrasena(:token, :nueva_contrasena)', {
+        replacements: { token, nueva_contrasena: hashedPassword },
+        type: QueryTypes.RAW
+      });
+      return result[0];  // Devolver el mensaje
+    } catch (error) {
+      console.error(`Error en ActualizarContrasena: ${error}`);
       throw error;
     }
   }
@@ -170,6 +212,14 @@ Usuario.init({
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: true
+  },
+  token_recuperacion: {  // Nuevo campo para el token de recuperación
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  fecha_token: {  // Nuevo campo para la fecha de expiración del token
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   sequelize,

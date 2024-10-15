@@ -1,27 +1,37 @@
 import { DataTypes, Model, QueryTypes } from 'sequelize';
-import { sequelize } from "../config/db.js";
+import { sequelize } from '../config/db.js';
 import Pedido from './Pedido.js';
 
 class DetallePedido extends Model {
   // Método para crear un nuevo detalle de pedido
-  static async createDetallePedido(id_pedido, nombre_producto, codigo_producto, precio, direccion, cantidad, opciones_adicionales, dedicatoria) {
+  static async crearDetallePedido({ id_pedido, nombre_producto, codigo_producto, precio, direccion, cantidad, opciones_adicionales, dedicatoria }) {
     try {
-      await sequelize.query(
+      const result = await sequelize.query(
         'CALL CrearDetallePedido(:id_pedido, :nombre_producto, :codigo_producto, :precio, :direccion, :cantidad, :opciones_adicionales, :dedicatoria)',
         {
-          replacements: { id_pedido, nombre_producto, codigo_producto, precio, direccion, cantidad, opciones_adicionales, dedicatoria },
+          replacements: {
+            id_pedido,
+            nombre_producto,
+            codigo_producto,
+            precio,
+            direccion,
+            cantidad,
+            opciones_adicionales,
+            dedicatoria,
+          },
           type: QueryTypes.RAW
         }
       );
-      return { message: 'Detalle de pedido creado exitosamente' };
+
+      return { message: "Detalle de pedido creado exitosamente", result };
     } catch (error) {
-      console.error(`Unable to create detalle pedido: ${error}`);
-      throw error;
+      console.error(`Error al crear detalle de pedido: ${error.message}`);
+      throw new Error('Error al crear el detalle de pedido.');
     }
   }
 
   // Método para obtener todos los detalles de pedidos
-  static async getAllDetalles() {
+  static async obtenerTodosDetalles() {
     try {
       const detalles = await sequelize.query('CALL ObtenerDetallesPedidos()', { type: QueryTypes.RAW });
       return detalles;
@@ -32,7 +42,7 @@ class DetallePedido extends Model {
   }
 
   // Método para obtener un detalle de pedido por ID
-  static async getDetallePedidoById(id) {
+  static async obtenerDetallePedidoPorId(id) {
     try {
       const [result] = await sequelize.query(
         'CALL ObtenerDetallePedidoPorId(:id)',
@@ -41,15 +51,15 @@ class DetallePedido extends Model {
           type: QueryTypes.RAW
         }
       );
-      return result;  // Devuelve el resultado directamente
+      return result;
     } catch (error) {
       console.error(`Unable to find detalle pedido by ID: ${error}`);
       throw error;
     }
   }
-  
+
   // Método para actualizar un detalle de pedido por ID
-  static async updateDetallePedido(id, id_pedido, nombre_producto, codigo_producto, precio, direccion, cantidad, opciones_adicionales, dedicatoria) {
+  static async actualizarDetallePedido(id, { id_pedido, nombre_producto, codigo_producto, precio, direccion, cantidad, opciones_adicionales, dedicatoria }) {
     try {
       await sequelize.query(
         'CALL ActualizarDetallePedido(:id, :id_pedido, :nombre_producto, :codigo_producto, :precio, :direccion, :cantidad, :opciones_adicionales, :dedicatoria)',
@@ -66,7 +76,7 @@ class DetallePedido extends Model {
   }
 
   // Método para eliminar un detalle de pedido por ID
-  static async deleteDetallePedido(id) {
+  static async eliminarDetallePedido(id) {
     try {
       await sequelize.query(
         'CALL EliminarDetallePedido(:id)',
@@ -88,7 +98,7 @@ DetallePedido.init({
   id_detalle_pedido: {
     type: DataTypes.INTEGER,
     primaryKey: true,
-    autoIncrement: true, // Asumido que el ID es autoincremental
+    autoIncrement: true,
     allowNull: false,
   },
   id_pedido: {
