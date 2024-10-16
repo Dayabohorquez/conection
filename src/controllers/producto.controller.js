@@ -18,6 +18,23 @@ class ProductoController {
     }
   }
 
+  static async obtenerProductoPorId(req, res) {
+    const { id } = req.params;
+
+    try {
+      const producto = await Producto.obtenerProductoPorId(id);
+
+      if (!producto || producto.length === 0) {
+        return res.status(404).json({ message: 'Producto no encontrado' });
+      }
+
+      return res.status(200).json(producto);
+    } catch (error) {
+      console.error('Error al obtener el producto:', error);
+      return res.status(500).json({ message: 'Error al obtener el producto', error });
+    }
+  }
+
   // Obtener productos por tipo de flor
   static async obtenerProductosPorTipoFlor(req, res) {
     const { tipoFlorId } = req.params;

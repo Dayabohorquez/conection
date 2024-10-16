@@ -123,33 +123,30 @@ class UsuarioController {
     const { documento } = req.params;
     const { oldPassword, newPassword } = req.body;
 
-    // Validar que ambas contraseñas se proporcionen
     if (!oldPassword || !newPassword) {
       return res.status(400).json({ message: 'Por favor, proporciona ambas contraseñas.' });
     }
 
     try {
-      // Obtener el usuario por documento
       const usuario = await Usuario.getUsuarioById(documento);
       if (!usuario) {
-        return res.status(404).json({ message: 'Usuario no encontrado' });
+        return res.status(404).json({ message: 'Usuario no encontrado.' });
       }
 
-      // Comparar la contraseña antigua
       const esValido = await bcrypt.compare(oldPassword, usuario.contrasena_usuario);
       if (!esValido) {
-        return res.status(400).json({ message: 'Contraseña antigua incorrecta' });
+        return res.status(400).json({ message: 'Contraseña antigua incorrecta.' });
       }
 
-      // Hashear la nueva contraseña
-      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+      const updateResult = await Usuario.updatePassword(documento, newPassword);
+      if (!updateResult.success) {
+        return res.status(500).json({ message: 'No se pudo actualizar la contraseña.' });
+      }
 
-      // Actualizar la contraseña en la base de datos
-      await Usuario.updatePassword(documento, hashedNewPassword);
-
-      res.json({ message: 'Contraseña cambiada exitosamente' });
+      res.json({ message: 'Contraseña cambiada exitosamente.' });
     } catch (error) {
-      return res.status(500).json({ message: 'Error al cambiar la contraseña', error });
+      console.error('Error al cambiar la contraseña:', error);
+      return res.status(500).json({ message: 'Error al cambiar la contraseña.', error: error.message });
     }
   }
 

@@ -34,18 +34,20 @@ class CarritoController {
 
   // Agregar un producto al carrito
   static async addToCarrito(req, res) {
-    const { documento, id_producto, cantidad } = req.body;
-    console.log({ documento, id_producto, cantidad });
+    const { documento, id_producto, cantidad, opcion_adicional } = req.body;
+    console.log({ documento, id_producto, cantidad, opcion_adicional });
 
     const documentoInt = parseInt(documento, 10);
     const idProductoInt = parseInt(id_producto, 10);
     const cantidadInt = parseInt(cantidad, 10);
 
+    // Validar que los valores sean numéricos
     if (isNaN(documentoInt) || isNaN(idProductoInt) || isNaN(cantidadInt)) {
       return res.status(400).json({ message: 'Los valores deben ser numéricos.' });
     }
 
     try {
+      // Verificar que el producto exista
       const producto = await Producto.findByPk(idProductoInt);
       if (!producto) {
         return res.status(404).json({ message: 'Producto no encontrado' });
@@ -57,13 +59,40 @@ class CarritoController {
         return res.status(400).json({ message: 'Cantidad no disponible.' });
       }
 
+      // Calcular el precio adicional
+      let precioAdicional = 0;
+      if (opcion_adicional === 'chocolate') {
+        precioAdicional = 30000;
+      } else if (opcion_adicional === 'vino') {
+        precioAdicional = 86000;
+      }
+
       // Agregar al carrito
-      await Carrito.addToCarrito(documentoInt, idProductoInt, cantidadInt);
-      const subtotal = producto.precio_producto * cantidadInt;
+      await Carrito.addToCarrito(documentoInt, idProductoInt, cantidadInt, precioAdicional);
+
+      const subtotal = (producto.precio_producto + precioAdicional) * cantidadInt; // Calcular subtotal
       res.status(201).json({ message: 'Producto agregado al carrito exitosamente', subtotal });
     } catch (error) {
+      // Manejo de errores específico
+      if (error.message === 'El documento no encontrado o inválido.') {
+        return res.status(404).json({ message: error.message });
+      }
       console.error('Error al agregar producto al carrito:', error);
-      res.status(500).json({ message: 'Error al agregar producto al carrito', error });
+      res.status(500).json({ message: 'Error al agregar producto al carrito', error: error.message });
+    }
+  }
+
+  // Obtener total del carrito de un usuario
+  static async getTotalCarrito(req, res) {
+    const { documento } = req.params;
+
+    try {
+      const carrito = await Carrito.getCarritoByUsuarioId(documento);
+      const totalGeneral = carrito.reduce((acc, item) => acc + item.total, 0);
+      res.json({ total: totalGeneral });
+    } catch (error) {
+      console.error('Error al obtener total del carrito:', error);
+      res.status(500).json({ message: 'Error al obtener total del carrito', error });
     }
   }
 

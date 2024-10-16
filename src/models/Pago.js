@@ -4,32 +4,32 @@ import { sequelize } from "../config/db.js";
 class Pago extends Model {
   static async crearPago(nombre_pago, fecha_pago, iva, metodo_pago, subtotal_pago, total_pago) {
     try {
-        const [result] = await sequelize.query(`
+      const [result] = await sequelize.query(`
             CALL CrearPago(:nombre_pago, :fecha_pago, :iva, :metodo_pago, :subtotal_pago, :total_pago);
         `, {
-            replacements: {
-                nombre_pago,
-                fecha_pago: new Date(fecha_pago), // Asegúrate de que esto sea un objeto Date
-                iva,
-                metodo_pago,
-                subtotal_pago,
-                total_pago
-            },
-            type: QueryTypes.RAW
-        });
+        replacements: {
+          nombre_pago,
+          fecha_pago: new Date(fecha_pago), // Asegúrate de que esto sea un objeto Date
+          iva,
+          metodo_pago,
+          subtotal_pago,
+          total_pago
+        },
+        type: QueryTypes.RAW
+      });
 
-        console.log('Resultado del procedimiento:', result); // Log para verificar la estructura
+      console.log('Resultado del procedimiento:', result); // Log para verificar la estructura
 
-        // Acceso directo al id_pago
-        if (!result || typeof result !== 'object' || !result.id_pago) {
-            throw new Error('El procedimiento no devolvió un resultado válido.');
-        }
+      // Acceso directo al id_pago
+      if (!result || typeof result !== 'object' || !result.id_pago) {
+        throw new Error('El procedimiento no devolvió un resultado válido.');
+      }
 
-        return result.id_pago; // Accede directamente al id_pago
+      return result.id_pago; // Accede directamente al id_pago
     } catch (error) {
-        throw new Error(`Error en crearPago (modelo): ${error.message}`);
+      throw new Error(`Error en crearPago (modelo): ${error.message}`);
     }
-}
+  }
 
   static async getPagos() {
     try {
@@ -93,6 +93,34 @@ class Pago extends Model {
       return { message: 'Estado del pago actualizado exitosamente' };
     } catch (error) {
       console.error(`Unable to update estado of pago: ${error}`);
+      throw error;
+    }
+  }
+
+  static async crearPagoYPedido(pagoData, pedidoData) {
+    try {
+      const result = await sequelize.query(
+        'CALL CrearPagoYPedido(:nombre_pago, :fecha_pago, :iva, :metodo_pago, :subtotal_pago, :total_pago, :fecha_pedido, :total_pagado, :documento, :id_carrito)',
+        {
+          replacements: {
+            nombre_pago: pagoData.nombre_pago,
+            fecha_pago: pagoData.fecha_pago,
+            iva: pagoData.iva,
+            metodo_pago: pagoData.metodo_pago,
+            subtotal_pago: pagoData.subtotal_pago,
+            total_pago: pagoData.total_pago,
+            fecha_pedido: pedidoData.fecha_pedido,
+            total_pagado: pedidoData.total_pagado,
+            documento: pedidoData.documento,
+            id_carrito: pedidoData.id_carrito,
+          },
+          type: QueryTypes.RAW,
+        }
+      );
+
+      return result;
+    } catch (error) {
+      console.error('Error al crear pago y pedido:', error);
       throw error;
     }
   }

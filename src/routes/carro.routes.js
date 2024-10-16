@@ -15,6 +15,9 @@ router.post('/api/carritos', CarritoController.addToCarrito);
 // Actualizar la cantidad de un producto en el carrito
 router.put('/api/carritos/:id_carrito', CarritoController.updateQuantityInCarrito);
 
+// Obtener total del carrito
+router.get('/api/carrito/total/:documento', CarritoController.getTotalCarrito);
+
 // Eliminar un producto del carrito
 router.delete('/api/carritos/:id_carrito', CarritoController.deleteFromCarrito);
 

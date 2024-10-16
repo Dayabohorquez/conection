@@ -107,14 +107,27 @@ class Usuario extends Model {
 
   // Método para actualizar la contraseña
   static async updatePassword(documento, newPassword) {
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await sequelize.query(
-      'UPDATE Usuario SET contrasena_usuario = :newPassword WHERE documento = :documento',
-      {
-        replacements: { newPassword: hashedPassword, documento },
-        type: QueryTypes.RAW
+    try {
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      console.log('Nuevo hash de contraseña:', hashedPassword); // Para depuración
+
+      const result = await sequelize.query(
+        'UPDATE Usuario SET contrasena_usuario = :newPassword WHERE documento = :documento',
+        {
+          replacements: { newPassword: hashedPassword, documento },
+          type: QueryTypes.RAW
+        }
+      );
+
+      if (result[0] === 0) {
+        throw new Error('No se encontró el usuario o la contraseña no se actualizó.');
       }
-    );
+
+      return { success: true, message: 'Contraseña actualizada con éxito.' };
+    } catch (error) {
+      console.error('Error al actualizar la contraseña:', error);
+      return { success: false, message: error.message };
+    }
   }
 
   // Método para comparar contraseñas

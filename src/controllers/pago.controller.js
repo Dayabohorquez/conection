@@ -122,6 +122,26 @@ class PagoController {
     }
   }
 
+  static async crearPagoYPedido(req, res) {
+    const { pagoData, pedidoData } = req.body;
+
+    try {
+      // Crear el pago
+      const nuevoPago = await Pago.create(pagoData);
+
+      // Crear el pedido, asegurando que se utiliza el id del nuevo pago
+      const nuevoPedido = await Pedido.create({
+        ...pedidoData,
+        pago_id: nuevoPago.id_pago, // Asegúrate de usar el ID correcto
+      });
+
+      return res.status(201).json({ message: 'Pago y pedido creados exitosamente' });
+    } catch (error) {
+      console.error('Error al crear pago y pedido:', error);
+      return res.status(500).json({ message: 'Error al crear el pago y el pedido' });
+    }
+  }
+
   // Eliminar un pago
   static async deletePago(req, res) {
     const { id } = req.params;

@@ -17,6 +17,8 @@ router.put('/api/pago/:id', PagoController.updatePago);
 
 router.put('/api/pagos/:id/estado', PagoController.actualizarEstadoPago);
 
+// Crear pago y pedido
+router.post('/api/pago-y-pedido', PagoController.crearPagoYPedido);
 
 // Eliminar un pago
 router.delete('/api/pago/:id', PagoController.deletePago);
