@@ -1,5 +1,5 @@
 import { DataTypes, Model, QueryTypes } from 'sequelize';
-import { sequelize } from "../config/db.js";
+import { sequelize } from '../config/db.js';
 import TipoFlor from '../models/TipoFlor.js';
 import Evento from '../models/Evento.js';
 
@@ -10,11 +10,12 @@ class Producto extends Model {
       const productos = await sequelize.query('CALL ObtenerProductos()', { type: QueryTypes.RAW });
       return productos;
     } catch (error) {
-      console.error(`Unable to fetch productos: ${error}`);
+      console.error(`No se pudieron obtener los productos: ${error}`);
       throw error;
     }
   }
 
+  // Obtener producto por ID
   static async obtenerProductoPorId(id_producto) {
     try {
       const producto = await sequelize.query('CALL ObtenerProductoPorId(:id)', {
@@ -23,7 +24,7 @@ class Producto extends Model {
       });
       return producto[0]; // Devuelve el primer resultado
     } catch (error) {
-      console.error(`Unable to fetch producto: ${error}`);
+      console.error(`No se pudo encontrar el producto: ${error}`);
       throw error;
     }
   }
@@ -37,7 +38,7 @@ class Producto extends Model {
       });
       return productos;
     } catch (error) {
-      console.error(`Unable to fetch productos by tipo flor: ${error}`);
+      console.error(`No se pudieron obtener productos por tipo de flor: ${error}`);
       throw error;
     }
   }
@@ -51,11 +52,12 @@ class Producto extends Model {
       });
       return productos;
     } catch (error) {
-      console.error(`Unable to fetch productos by fecha especial: ${error}`);
+      console.error(`No se pudieron obtener productos por fecha especial: ${error}`);
       throw error;
     }
   }
 
+  // Crear nuevo producto
   static async crearProducto({
     codigo_producto,
     nombre_producto,
@@ -66,115 +68,113 @@ class Producto extends Model {
     cantidad_disponible,
     id_tipo_flor,
     id_evento,
-    id_fecha_especial  // Nuevo parámetro para la fecha especial
+    id_fecha_especial
   }) {
     try {
-      const query = `
-            CALL CrearProducto(
-                :codigo_producto,
-                :nombre_producto,
-                :foto_Producto,
-                :foto_ProductoURL,
-                :descripcion_producto,
-                :precio_producto,
-                :cantidad_disponible,
-                :id_tipo_flor,
-                :id_evento,
-                :id_fecha_especial
-            );
-        `;
-
-      const replacements = {
-        codigo_producto,
-        nombre_producto,
-        foto_Producto,
-        foto_ProductoURL,
-        descripcion_producto,
-        precio_producto,
-        cantidad_disponible,
-        id_tipo_flor,
-        id_evento,
-        id_fecha_especial  
-      };
-
-      await sequelize.query(query, {
-        replacements,
+      await sequelize.query(`
+        CALL CrearProducto(
+          :codigo_producto,
+          :nombre_producto,
+          :foto_Producto,
+          :foto_ProductoURL,
+          :descripcion_producto,
+          :precio_producto,
+          :cantidad_disponible,
+          :id_tipo_flor,
+          :id_evento,
+          :id_fecha_especial
+        );`, {
+        replacements: {
+          codigo_producto,
+          nombre_producto,
+          foto_Producto,
+          foto_ProductoURL,
+          descripcion_producto,
+          precio_producto,
+          cantidad_disponible,
+          id_tipo_flor,
+          id_evento,
+          id_fecha_especial
+        },
         type: QueryTypes.RAW
       });
 
       return { message: 'Producto creado exitosamente' };
     } catch (error) {
-      console.error(`Unable to create producto: ${error}`);
+      console.error(`No se pudo crear el producto: ${error}`);
       throw error;
     }
   }
 
+  // Actualizar producto
   static async actualizarProducto({
     id_producto,
     codigo_producto,
     nombre_producto,
-    foto_Producto, // Ahora puede ser undefined
-    foto_ProductoURL, // Ahora puede ser undefined
+    foto_Producto,
+    foto_ProductoURL,
     descripcion_producto,
     precio_producto,
     cantidad_disponible,
     id_tipo_flor,
     id_evento,
-    id_fecha_especial  // Nuevo parámetro para la fecha especial
+    id_fecha_especial
   }) {
     try {
-      const query = `
-            CALL actualizarProducto(
-                :id_producto,
-                :codigo_producto,
-                :nombre_producto,
-                :foto_producto, 
-                :foto_productoURL, 
-                :descripcion_producto,
-                :precio_producto,
-                :cantidad_disponible,
-                :id_tipo_flor,
-                :id_evento,
-                :id_fecha_especial 
-            );
-        `;
+      await sequelize.query(`
+        CALL ActualizarProducto(
+          :id_producto,
+          :codigo_producto,
+          :nombre_producto,
+          :foto_Producto,
+          :foto_ProductoURL,
+          :descripcion_producto,
+          :precio_producto,
+          :cantidad_disponible,
+          :id_tipo_flor,
+          :id_evento,
+          :id_fecha_especial
+        );`, {
+        replacements: {
+          id_producto,
+          codigo_producto,
+          nombre_producto,
+          foto_Producto: foto_Producto || null,
+          foto_ProductoURL: foto_ProductoURL || null,
+          descripcion_producto,
+          precio_producto,
+          cantidad_disponible,
+          id_tipo_flor,
+          id_evento,
+          id_fecha_especial
+        },
+        type: QueryTypes.RAW
+      });
 
-      const replacements = {
-        id_producto,
-        codigo_producto,
-        nombre_producto,
-        foto_producto: foto_Producto || null, // Usa null si no hay nueva foto
-        foto_productoURL: foto_ProductoURL || null, // Usa null si no hay nueva URL
-        descripcion_producto,
-        precio_producto,
-        cantidad_disponible,
-        id_tipo_flor,
-        id_evento,
-        id_fecha_especial 
-      };
-
-      await sequelize.query(query, { replacements, type: QueryTypes.RAW });
+      return { message: 'Producto actualizado exitosamente' };
     } catch (error) {
-      console.error("Error al actualizar el producto:", error);
-      throw error; // Re-lanzar el error para manejarlo en otro lugar
+      console.error(`Error al actualizar el producto: ${error}`);
+      throw error;
     }
   }
 
   // Cambiar estado de un producto (activado/desactivado)
-  static async cambiarEstadoProducto(idProducto, nuevoEstado) {
+  static async cambiarEstadoProducto(id_producto, nuevo_estado) {
     try {
-      await sequelize.query('CALL CambiarEstadoProducto(:idProducto, :nuevoEstado)', {
-        replacements: { idProducto, nuevoEstado },
+      await sequelize.query('CALL CambiarEstadoProducto(:id_producto, :nuevo_estado)', {
+        replacements: { id_producto, nuevo_estado },
         type: QueryTypes.RAW
       });
-      return { message: 'Estado de producto actualizado' };
+      return { message: 'Estado del producto actualizado' };
     } catch (error) {
-      console.error(`Unable to toggle producto state: ${error}`);
+      console.error(`No se pudo cambiar el estado del producto: ${error}`);
       throw error;
     }
   }
+
 }
 
+// Definición del modelo Producto
 Producto.init({
   id_producto: {
     type: DataTypes.INTEGER,
@@ -226,7 +226,7 @@ Producto.init({
       key: 'id_evento'
     }
   },
-  id_fecha_especial: {  // Agregar referencia a fecha especial
+  id_fecha_especial: {
     type: DataTypes.INTEGER,
     references: {
       model: 'Fecha_Especial',

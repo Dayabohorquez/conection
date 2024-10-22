@@ -7,12 +7,11 @@ class UsuarioController {
   static async getUsuarios(req, res) {
     try {
       const usuarios = await Usuario.getUsuarios();
-      const usuariosArray = Object.values(usuarios);
-      console.log('Usuarios obtenidos:', usuariosArray);
-      if (!Array.isArray(usuariosArray) || usuariosArray.length === 0) {
+      console.log('Usuarios obtenidos:', usuarios);
+      if (!Array.isArray(usuarios) || usuarios.length === 0) {
         return res.status(404).json({ message: 'No se encontraron usuarios' });
       }
-      res.json(usuariosArray);
+      res.json(usuarios);
     } catch (error) {
       res.status(500).json({ message: 'Error al obtener usuarios', error });
     }
@@ -185,16 +184,13 @@ class UsuarioController {
     }
 
     try {
-      const usuario = await Usuario.findOne({ where: { correo_electronico_usuario } });
+      const usuario = await Usuario.getUsuarioById(correo_electronico_usuario);
 
       if (!usuario) {
         return res.status(404).json({ message: 'Correo electrónico no encontrado.' });
       }
 
       const tokenData = await Usuario.solicitarRestablecimientoContrasena(correo_electronico_usuario);
-
-      // Asegúrate de que `tokenData` tiene la estructura correcta
-      const token = tokenData.token; // Cambia según tu lógica
 
       // Enviar correo utilizando la función sendEmail
       await sendEmail(

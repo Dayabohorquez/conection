@@ -10,15 +10,12 @@ router.get('/api/pedidos', PedidoController.obtenerPedidos);
 router.get('/api/pedidos/:id_pedido', PedidoController.obtenerPedidoPorId);
 
 // Crear un nuevo pedido
-router.post('/api/pedido', PedidoController.crearPedido);
+router.post('/api/pedidos', PedidoController.crearPedido);
 
 // Actualizar un pedido existente
 router.put('/api/pedidos/:id_pedido', PedidoController.actualizarPedido);
 
 // Cambiar el estado de un pedido
 router.patch('/api/pedidos/:id_pedido/estado', PedidoController.cambiarEstadoPedido);
-
-// Obtener historial de compras por ID de usuario
-router.get('/api/usuarios/:documento/historial', PedidoController.obtenerHistorialPedidosPorUsuarioId);
 
 export default router;

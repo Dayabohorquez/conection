@@ -3,15 +3,14 @@ import { sequelize } from "../config/db.js";
 import Carrito from './Carrito.js';
 import Pago from './Pago.js';
 import Usuario from './Usuario.js';
-import HistorialPedido from './HistorialPedido.js';
 
 class Pedido extends Model {
   static async obtenerPedidos() {
     try {
-      const pedido = await sequelize.query('CALL obtenerPedidos()', { type: QueryTypes.RAW });
-      return pedido;
+      const pedidos = await sequelize.query('CALL ObtenerPedidos()', { type: QueryTypes.RAW });
+      return pedidos; // Devuelve el primer elemento del array resultante
     } catch (error) {
-      console.error(`Unable to fetch pedido: ${error}`);
+      console.error(`Unable to fetch pedidos: ${error}`);
       throw error;
     }
   }
@@ -22,7 +21,7 @@ class Pedido extends Model {
         replacements: { id_pedido: idPedido },
         type: QueryTypes.RAW,
       });
-      return pedido;
+      return pedido[0]; // Devuelve el primer elemento del array resultante
     } catch (error) {
       console.error(`Unable to find pedido by id: ${error}`);
       throw error;
@@ -30,55 +29,50 @@ class Pedido extends Model {
   }
 
   static async crearPedido(pedidoData) {
-    const { fecha_pedido, total_pagado, documento, pago_id, id_carrito } = pedidoData;
+    const { fecha_pedido, total_pagado, documento, pago_id } = pedidoData;
 
     try {
       const result = await sequelize.query(
-        'CALL CrearPedido(:fecha_pedido, :total_pagado, :documento, :pago_id, :id_carrito)',
+        'CALL CrearPedido(:fecha_pedido, :total_pagado, :documento, :pago_id)',
         {
           replacements: {
             fecha_pedido,
             total_pagado,
             documento,
             pago_id,
-            id_carrito,
           },
           type: QueryTypes.RAW,
         }
       );
 
-      return result; // Asegúrate de que esto sea lo que necesitas
+      return result; // Devuelve el ID del nuevo pedido
     } catch (error) {
       console.error('Error en crearPedido (modelo):', error);
       throw error;
     }
   }
 
-  static async obtenerHistorialPedidosPorUsuarioId(documento) {
-    try {
-      const historial = await sequelize.query('CALL ObtenerHistorialPedidosPorUsuarioId(:documento)', {
-        replacements: { documento },
-        type: QueryTypes.RAW,
-      });
-      return historial;
-    } catch (error) {
-      console.error(`Unable to find historial de pedidos: ${error}`);
-      throw error;
-    }
-  }
-
   static async actualizarPedido(idPedido, updatedData) {
     try {
-      await sequelize.query('CALL ActualizarPedido(:p_id_pedido, :p_fecha_pedido, :p_total_pagado, :p_documento, :p_pago_id)', {
-        replacements: {
-          p_id_pedido: idPedido,
-          p_fecha_pedido: updatedData.fecha_pedido,
-          p_total_pagado: updatedData.total_pagado,
-          p_documento: updatedData.documento,
-          p_pago_id: updatedData.pago_id
-        },
-        type: QueryTypes.RAW,
-      });
+      // Verifica que idPedido sea un número
+      if (isNaN(idPedido)) {
+        throw new Error('ID del pedido no válido.');
+      }
+
+      // Llamar al procedimiento almacenado
+      const result = await sequelize.query(
+        'CALL ActualizarPedido(:p_id_pedido, :p_fecha_pedido, :p_total_pagado, :p_documento, :p_pago_id)',
+        {
+          replacements: {
+            p_id_pedido: idPedido,
+            p_fecha_pedido: updatedData.fecha_pedido,
+            p_total_pagado: updatedData.total_pagado,
+            p_documento: updatedData.documento,
+            p_pago_id: updatedData.pago_id,
+          },
+          type: QueryTypes.RAW,
+        }
+      );
 
       return { message: 'Pedido actualizado exitosamente' };
     } catch (error) {
@@ -87,29 +81,32 @@ class Pedido extends Model {
     }
   }
 
-  static async cambiarEstadoPedido(idPedido, nuevo_estado) {
+  static async actualizarEstadoPedido(idPedido, nuevoEstado) {
     try {
-      await sequelize.query(
+      // Validar que el estado sea uno de los válidos
+      const estadosValidos = ['Pendiente', 'Enviado', 'Entregado', 'Cancelado'];
+      if (!estadosValidos.includes(nuevoEstado)) {
+        throw new Error('Estado no válido. Debe ser uno de: ' + estadosValidos.join(', '));
+      }
+
+      // Llamar al procedimiento almacenado
+      const result = await sequelize.query(
         'CALL ActualizarEstadoPedido(:p_id_pedido, :nuevo_estado)',
         {
-          replacements: { p_id_pedido: idPedido, nuevo_estado },
-          type: QueryTypes.RAW
+          replacements: { p_id_pedido: idPedido, nuevo_estado: nuevoEstado },
+          type: QueryTypes.RAW,
         }
       );
 
-      const fechaCambio = new Date();
-      await HistorialPedido.create({
-        id_pedido: idPedido,
-        estado_pedido: nuevo_estado,
-        fecha_cambio: fechaCambio,
-      });
+      return { message: 'Estado del pedido actualizado exitosamente' };
     } catch (error) {
-      console.error('Error en cambiarEstadoPedido (modelo):', error);
-      throw error;
+      console.error('Error en actualizarEstadoPedido (modelo):', error.message);
+      throw error; // Propagar el error
     }
   }
 }
 
+// Inicialización del modelo
 Pedido.init({
   id_pedido: {
     type: DataTypes.INTEGER,
@@ -129,19 +126,13 @@ Pedido.init({
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
   },
-  foto_Pedido: {
-    type: DataTypes.TEXT,
-  },
-  foto_PedidoURL: {
-    type: DataTypes.TEXT,
-  },
 }, {
   sequelize,
   tableName: 'Pedido',
   timestamps: false,
-  underscored: false,
 });
 
+// Definición de relaciones
 Pedido.belongsTo(Usuario, { foreignKey: 'documento' });
 Pedido.belongsTo(Pago, { foreignKey: 'pago_id' });
 Pedido.belongsTo(Carrito, { foreignKey: 'id_carrito' });

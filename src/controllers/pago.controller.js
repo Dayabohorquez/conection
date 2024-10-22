@@ -1,155 +1,76 @@
-import Pago from "../models/Pago.js";
-import Pedido from "../models/Pedido.js";
-import Carrito from "../models/Carrito.js";
+import Pago from '../models/Pago.js';
 
 class PagoController {
-  // Crear un nuevo pago y un pedido asociado
-  static async createPago(req, res) {
-    const {
-      nombre_pago,
-      fecha_pago,
-      iva,
-      metodo_pago,
-      subtotal_pago,
-      total_pago,
-      documento,
-      id_carrito
-    } = req.body;
-
-    // Validación de campos obligatorios
-    if (!nombre_pago || !fecha_pago || !iva || !metodo_pago || !subtotal_pago || !total_pago || !documento || !id_carrito) {
-      return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
-    }
-
-    const pagoData = {
-      nombre_pago,
-      fecha_pago: new Date(fecha_pago), // Asegúrate de que esto sea un objeto Date
-      iva,
-      metodo_pago,
-      subtotal_pago,
-      total_pago
-    };
-
+  // Crear un nuevo pago
+  static async crearPago(req, res) {
     try {
-      // Verificar si el carrito existe
-      const carrito = await Carrito.getCarritoByUsuarioId(documento); // Asegúrate de que esta función exista
-      if (!carrito) {
-        return res.status(404).json({ message: 'Carrito no encontrado.' });
-      }
-
-      // Crear el pago
-      const nuevoPagoId = await Pago.crearPago(pagoData.nombre_pago, pagoData.fecha_pago, pagoData.iva, pagoData.metodo_pago, pagoData.subtotal_pago, pagoData.total_pago);
-      console.log('Nuevo Pago ID:', nuevoPagoId); // Esto debe mostrar el id_pago
-
-      // Crear el pedido asociado
-      const pedidoData = {
-        fecha_pedido: new Date(),
-        total_pagado: total_pago,
-        documento,
-        pago_id: nuevoPagoId,
-        id_carrito
-      };
-
-      const nuevoPedido = await Pedido.crearPedido(pedidoData);
-
-      // Vaciar el carrito
-      await Carrito.vaciarCarrito(id_carrito);
-
-      res.status(201).json({ message: 'Pago, pedido creados y carrito vaciado exitosamente', pedido: nuevoPedido });
+      const nuevoPago = await Pago.crearPago(req.body);
+      return res.status(201).json({ id_pago: nuevoPago, message: 'Pago creado exitosamente.' });
     } catch (error) {
-      console.error('Error al crear pago y pedido:', error);
-      res.status(500).json({ message: 'Error al crear pago y pedido', error: error.message });
+      return res.status(500).json({ message: error.message });
     }
   }
 
   // Obtener todos los pagos
-  static async getPagos(req, res) {
+  static async obtenerPagos(req, res) {
     try {
-      const pagos = await Pago.getPagos();
-      res.json(pagos);
+      const pagos = await Pago.obtenerPagos();
+      return res.status(200).json(pagos);
     } catch (error) {
-      res.status(500).json({ message: 'Error al obtener pagos', error: error.message });
+      return res.status(500).json({ message: error.message });
     }
   }
 
   // Obtener un pago por ID
-  static async getPagoById(req, res) {
+  static async obtenerPagoPorId(req, res) {
     const { id } = req.params;
     try {
-      const pago = await Pago.getPagoById(id);
-      if (!pago.length) {
-        return res.status(404).json({ message: 'Pago no encontrado' });
+      const pago = await Pago.obtenerPagoPorId(id);
+      if (!pago) {
+        return res.status(404).json({ message: 'Pago no encontrado.' });
       }
-      res.json(pago);
+      return res.status(200).json(pago);
     } catch (error) {
-      res.status(500).json({ message: 'Error al obtener pago por ID', error: error.message });
+      return res.status(500).json({ message: error.message });
     }
   }
 
-  // Actualizar un pago existente
-  static async updatePago(req, res) {
+  // Actualizar un pago
+  static async actualizarPago(req, res) {
     const { id } = req.params;
     const updatedData = req.body;
 
-    // Validación de entrada
-    if (!updatedData || Object.keys(updatedData).length === 0) {
-      return res.status(400).json({ message: 'Los datos a actualizar son obligatorios.' });
-    }
-
     try {
-      const message = await Pago.updatePago(id, updatedData);
-      res.json({ message });
+      await Pago.actualizarPago(id, updatedData);
+      return res.status(200).json({ message: 'Pago actualizado exitosamente.' });
     } catch (error) {
-      res.status(500).json({ message: 'Error al actualizar pago', error: error.message });
+      return res.status(500).json({ message: error.message });
     }
   }
 
-  // Controlador para actualizar el estado de un pago
+  // Actualizar el estado de un pago
   static async actualizarEstadoPago(req, res) {
-    const { id } = req.params;
     const { estado_pago } = req.body;
-
-    // Validación de entrada
-    if (!estado_pago) {
-      return res.status(400).json({ message: 'El estado del pago es obligatorio.' });
-    }
+    const { id } = req.params; // Asegúrate de que esto coincide con la ruta
 
     try {
-      const resultado = await Pago.updateEstadoPago(id, estado_pago);
-      res.json(resultado);
+      const result = await Pago.actualizarEstadoPago(id, estado_pago);
+      res.status(200).json(result);
     } catch (error) {
+      console.error('Error al actualizar el estado del pago:', error);
       res.status(500).json({ message: 'Error al actualizar el estado del pago', error: error.message });
     }
   }
 
-  static async crearPagoYPedido(req, res) {
-    const { pagoData, pedidoData } = req.body;
-
-    try {
-      // Crear el pago
-      const nuevoPago = await Pago.create(pagoData);
-
-      // Crear el pedido, asegurando que se utiliza el id del nuevo pago
-      const nuevoPedido = await Pedido.create({
-        ...pedidoData,
-        pago_id: nuevoPago.id_pago, // Asegúrate de usar el ID correcto
-      });
-
-      return res.status(201).json({ message: 'Pago y pedido creados exitosamente' });
-    } catch (error) {
-      console.error('Error al crear pago y pedido:', error);
-      return res.status(500).json({ message: 'Error al crear el pago y el pedido' });
-    }
-  }
-
   // Eliminar un pago
-  static async deletePago(req, res) {
+  static async eliminarPago(req, res) {
     const { id } = req.params;
+
     try {
-      const message = await Pago.deletePago(id);
-      res.json({ message });
+      await Pago.eliminarPago(id);
+      return res.status(200).json({ message: 'Pago eliminado exitosamente.' });
     } catch (error) {
-      res.status(500).json({ message: 'Error al eliminar pago', error: error.message });
+      return res.status(500).json({ message: error.message });
     }
   }
 }

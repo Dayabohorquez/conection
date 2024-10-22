@@ -35,7 +35,6 @@ class EventoController {
 
   // Crear un nuevo evento
   static async crearEvento(req, res) {
-    // Validar que se subió un archivo
     if (!req.files || !req.files.foto_evento) {
       return res.status(400).json({ message: 'No se subió ninguna imagen' });
     }
@@ -53,7 +52,7 @@ class EventoController {
       }
 
       try {
-        const { nombre_evento, descripcion } = req.body; // Ahora se incluye 'descripcion'
+        const { nombre_evento, descripcion } = req.body;
 
         if (!nombre_evento || !descripcion) {
           return res.status(400).json({ message: 'Faltan datos requeridos' });
@@ -63,7 +62,7 @@ class EventoController {
           nombre_evento,
           foto_evento: `./uploads/img/evento/${uniqueFileName}`,
           foto_eventoURL,
-          descripcion // Agregar descripción
+          descripcion
         };
 
         // Depurar los datos del evento antes de la creación
@@ -81,7 +80,7 @@ class EventoController {
   // Actualizar evento por ID
   static async actualizarEvento(req, res) {
     const { id_evento } = req.params;
-    const { nombre_evento, descripcion } = req.body; // Ahora se incluye 'descripcion'
+    const { nombre_evento, descripcion } = req.body;
 
     let foto_eventoURL = null;
     let foto_evento = null;
@@ -96,14 +95,16 @@ class EventoController {
       foto_eventoURL = `http://localhost:4000/uploads/img/evento/${uniqueFileName}`;
       foto_evento = `./uploads/img/evento/${uniqueFileName}`;
     } else {
-      // Mantener la foto actual
       const existingEvento = await Evento.getEventoById(id_evento);
+      if (!existingEvento) {
+        return res.status(404).json({ message: 'Evento no encontrado' });
+      }
       foto_evento = existingEvento.foto_evento;
       foto_eventoURL = existingEvento.foto_eventoURL;
     }
 
     try {
-      await Evento.updateEvento(id_evento, nombre_evento, foto_evento, foto_eventoURL, descripcion); // Se pasa descripción
+      await Evento.updateEvento(id_evento, nombre_evento, foto_evento, foto_eventoURL, descripcion);
       res.json({ message: 'Evento actualizado correctamente' });
     } catch (error) {
       console.error('Error al actualizar evento:', error);
@@ -115,8 +116,8 @@ class EventoController {
   static async eliminarEvento(req, res) {
     const { id_evento } = req.params;
     try {
-      const message = await Evento.deleteEvento(id_evento);
-      res.json({ message });
+      await Evento.deleteEvento(id_evento);
+      res.json({ message: 'Evento eliminado correctamente' });
     } catch (error) {
       console.error('Error al eliminar evento:', error);
       res.status(500).json({ message: 'Error al eliminar evento', error });

@@ -1,30 +1,32 @@
-import { Router } from 'express';
+import express from 'express';
 import CarritoController from '../controllers/carro.controller.js';
+import { authenticateToken } from '../middleware/login.middleware.js';
 
-const router = Router();
+const router = express.Router();
 
-// Obtener todos los carritos
-router.get('/api/carritos', CarritoController.getAllCarritos);
+// Obtener carrito de un usuario por documento
+router.get('/api/carrito/:documento', CarritoController.obtenerCarritoPorUsuarioId);
 
-// Obtener el carrito de un usuario específico por documento
-router.get('/api/carritos/:documento', CarritoController.getCarritoByUsuarioId);
+router.get('/api/carrito/completo/:documento', CarritoController.ObtenerCarritoCompletoPorUsuarioId);
 
 // Agregar un producto al carrito
-router.post('/api/carritos', CarritoController.addToCarrito);
+router.post('/api/carrito/agregar', CarritoController.agregarAlCarrito);
 
 // Actualizar la cantidad de un producto en el carrito
-router.put('/api/carritos/:id_carrito', CarritoController.updateQuantityInCarrito);
+router.put('/api/carrito/actualizar/:id_carrito_item', CarritoController.actualizarCantidad);
 
-// Obtener total del carrito
-router.get('/api/carrito/total/:documento', CarritoController.getTotalCarrito);
+router.put('/api/actualizarTotal/:id_carrito', CarritoController.actualizarTotalCarrito);
+
+router.put('/api/carritos/actualizar/:itemId', CarritoController.actualizarCarritoItem);
 
 // Eliminar un producto del carrito
-router.delete('/api/carritos/:id_carrito', CarritoController.deleteFromCarrito);
+router.delete('/api/carrito/eliminar/:id_carrito_item', CarritoController.eliminarDelCarrito);
 
 // Vaciar el carrito de un usuario
-router.delete('/api/carritos/vaciar/:documento', CarritoController.vaciarCarrito);
+router.delete('/api/carrito/vaciar/:documento', CarritoController.vaciarCarrito);
 
-// Verificar la disponibilidad de un producto
-router.get('/api/carritos/disponibilidad/:id_producto', CarritoController.checkAvailabilityInCarrito);
+router.get('/api/carrito/verificar/:id_producto/:cantidad', CarritoController.verificarDisponibilidad);
+
+router.post('/api/carrito/crear', authenticateToken, CarritoController.crearCarrito);
 
 export default router;

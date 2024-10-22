@@ -10,8 +10,9 @@
     // Obtener un tipo de flor por ID
     router.get('/api/tipo-flor/:id', TipoFlorController.getTipoFlorById);
 
-    router.put('/api/tipo-flor/:id_tipo_flor', TipoFlorController.updateTipoFlor);
-    router.post('/api/tipo-flor', TipoFlorController.createTipoFlor);    
+    router.put('/api/tipo-flor/:id_tipo_flor', TipoFlorController.putTipoFlor);
+
+    router.post('/api/tipo-flor', TipoFlorController.postTipoFlor);    
 
     // Eliminar un tipo de flor
     router.delete('/api/tipo-flor/:id', TipoFlorController.deleteTipoFlor);

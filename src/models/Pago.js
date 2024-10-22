@@ -1,76 +1,77 @@
 import { DataTypes, Model, QueryTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
+import Usuario from './Usuario.js';
 
 class Pago extends Model {
-  static async crearPago(nombre_pago, fecha_pago, iva, metodo_pago, subtotal_pago, total_pago) {
+  static async crearPago(pagoData) {
+    const { documento, fecha_pago, metodo_pago, subtotal_pago, total_pago } = pagoData;
+
     try {
-      const [result] = await sequelize.query(`
-            CALL CrearPago(:nombre_pago, :fecha_pago, :iva, :metodo_pago, :subtotal_pago, :total_pago);
-        `, {
-        replacements: {
-          nombre_pago,
-          fecha_pago: new Date(fecha_pago), // Asegúrate de que esto sea un objeto Date
-          iva,
-          metodo_pago,
-          subtotal_pago,
-          total_pago
-        },
-        type: QueryTypes.RAW
-      });
+      const [result] = await sequelize.query(
+        `CALL CrearPago(:documento, :fecha_pago, :metodo_pago, :subtotal_pago, :total_pago);`,
+        {
+          replacements: {
+            documento,
+            fecha_pago: new Date(fecha_pago), // Asegúrate de que esto sea un objeto Date
+            metodo_pago,
+            subtotal_pago,
+            total_pago
+          },
+          type: QueryTypes.RAW
+        }
+      );
 
-      console.log('Resultado del procedimiento:', result); // Log para verificar la estructura
-
-      // Acceso directo al id_pago
+      // Asegúrate de que el resultado contenga un ID válido
       if (!result || typeof result !== 'object' || !result.id_pago) {
         throw new Error('El procedimiento no devolvió un resultado válido.');
       }
 
-      return result.id_pago; // Accede directamente al id_pago
+      return result.id_pago; // Devuelve el ID del nuevo pago
     } catch (error) {
       throw new Error(`Error en crearPago (modelo): ${error.message}`);
     }
   }
 
-  static async getPagos() {
+  static async obtenerPagos() {
     try {
       const pagos = await sequelize.query('CALL ObtenerPagos()', { type: QueryTypes.RAW });
-      return pagos;
+      return pagos; // Devuelve el primer elemento del array resultante
     } catch (error) {
       console.error(`Unable to find all pagos: ${error.message}`);
       throw error;
     }
   }
 
-  static async getPagoById(id) {
+  static async obtenerPagoPorId(id) {
     try {
       const pago = await sequelize.query('CALL ObtenerPagoPorId(:id)', {
         replacements: { id },
         type: QueryTypes.RAW
       });
-      return pago;
+      return pago[0]; // Devuelve el primer elemento del array resultante
     } catch (error) {
       console.error(`Unable to find pago by id: ${error}`);
       throw error;
     }
   }
 
-  static async updatePago(id, updated_pago) {
+  static async actualizarPago(id, updatedData) {
     try {
       await sequelize.query(
-        'CALL ActualizarPago(:id_pago, :nombre_pago, :fecha_pago, :iva, :metodo_pago, :subtotal_pago, :total_pago)',
+        'CALL ActualizarPago(:id_pago, :documento, :fecha_pago, :metodo_pago, :subtotal_pago, :total_pago)',
         {
           replacements: {
             id_pago: id,
-            nombre_pago: updated_pago.nombre_pago,
-            fecha_pago: updated_pago.fecha_pago,
-            iva: updated_pago.iva,
-            metodo_pago: updated_pago.metodo_pago,
-            subtotal_pago: updated_pago.subtotal_pago,
-            total_pago: updated_pago.total_pago
+            documento: updatedData.documento,
+            fecha_pago: updatedData.fecha_pago,
+            metodo_pago: updatedData.metodo_pago,
+            subtotal_pago: updatedData.subtotal_pago,
+            total_pago: updatedData.total_pago
           },
           type: QueryTypes.RAW
         }
       );
+
       return { message: 'Pago actualizado exitosamente' };
     } catch (error) {
       console.error(`Unable to update pago: ${error}`);
@@ -78,54 +79,23 @@ class Pago extends Model {
     }
   }
 
-  static async updateEstadoPago(id, estado) {
+  static async actualizarEstadoPago(id_pago, estado_pago) {
     try {
       await sequelize.query(
-        'CALL ActualizarEstadoPago(:id_pago, :estado_pago)',
+        'CALL ActualizarEstadoPago(:p_id_pago, :p_estado_pago)',
         {
-          replacements: {
-            id_pago: id,
-            estado_pago: estado,
-          },
+          replacements: { p_id_pago: id_pago, p_estado_pago: estado_pago },
           type: QueryTypes.RAW,
         }
       );
       return { message: 'Estado del pago actualizado exitosamente' };
     } catch (error) {
-      console.error(`Unable to update estado of pago: ${error}`);
+      console.error(`Unable to update pago: ${error}`);
       throw error;
     }
   }
 
-  static async crearPagoYPedido(pagoData, pedidoData) {
-    try {
-      const result = await sequelize.query(
-        'CALL CrearPagoYPedido(:nombre_pago, :fecha_pago, :iva, :metodo_pago, :subtotal_pago, :total_pago, :fecha_pedido, :total_pagado, :documento, :id_carrito)',
-        {
-          replacements: {
-            nombre_pago: pagoData.nombre_pago,
-            fecha_pago: pagoData.fecha_pago,
-            iva: pagoData.iva,
-            metodo_pago: pagoData.metodo_pago,
-            subtotal_pago: pagoData.subtotal_pago,
-            total_pago: pagoData.total_pago,
-            fecha_pedido: pedidoData.fecha_pedido,
-            total_pagado: pedidoData.total_pagado,
-            documento: pedidoData.documento,
-            id_carrito: pedidoData.id_carrito,
-          },
-          type: QueryTypes.RAW,
-        }
-      );
-
-      return result;
-    } catch (error) {
-      console.error('Error al crear pago y pedido:', error);
-      throw error;
-    }
-  }
-
-  static async deletePago(id) {
+  static async eliminarPago(id) {
     try {
       await sequelize.query('CALL EliminarPago(:id)', {
         replacements: { id },
@@ -139,6 +109,7 @@ class Pago extends Model {
   }
 }
 
+// Inicialización del modelo
 Pago.init({
   id_pago: {
     type: DataTypes.INTEGER,
@@ -146,16 +117,12 @@ Pago.init({
     allowNull: false,
     autoIncrement: true,
   },
-  nombre_pago: {
-    type: DataTypes.STRING(100),
+  documento: {
+    type: DataTypes.INTEGER,
     allowNull: false,
   },
   fecha_pago: {
     type: DataTypes.DATE,
-    allowNull: false,
-  },
-  iva: {
-    type: DataTypes.INTEGER,
     allowNull: false,
   },
   metodo_pago: {
@@ -178,7 +145,9 @@ Pago.init({
   sequelize,
   tableName: 'Pago',
   timestamps: false,
-  underscored: false,
 });
+
+// Definición de relaciones
+Pago.belongsTo(Usuario, { foreignKey: 'documento' });
 
 export default Pago;

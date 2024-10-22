@@ -18,6 +18,7 @@ class ProductoController {
     }
   }
 
+  // Obtener producto por ID
   static async obtenerProductoPorId(req, res) {
     const { id } = req.params;
 
@@ -65,6 +66,7 @@ class ProductoController {
     }
   }
 
+  // Crear un nuevo producto
   static async crearProducto(req, res) {
     // Validar que se subió un archivo
     if (!req.files || !req.files.foto_Producto) {
@@ -84,7 +86,6 @@ class ProductoController {
       }
 
       try {
-        // Verificar que todos los campos requeridos estén presentes
         const {
           codigo_producto,
           nombre_producto,
@@ -102,16 +103,16 @@ class ProductoController {
         }
 
         const productoData = {
-          codigo_producto: parseInt(req.body.codigo_producto),
-          nombre_producto: req.body.nombre_producto,
+          codigo_producto: parseInt(codigo_producto),
+          nombre_producto,
           foto_Producto: `./uploads/img/producto/${uniqueFileName}`,
           foto_ProductoURL,
-          descripcion_producto: req.body.descripcion_producto,
-          precio_producto: parseFloat(req.body.precio_producto),
-          cantidad_disponible: parseInt(req.body.cantidad_disponible),
-          id_tipo_flor: parseInt(req.body.id_tipo_flor),
-          id_evento: parseInt(req.body.id_evento),
-          id_fecha_especial: parseInt(req.body.id_fecha_especial) 
+          descripcion_producto,
+          precio_producto: parseFloat(precio_producto),
+          cantidad_disponible: parseInt(cantidad_disponible),
+          id_tipo_flor: parseInt(id_tipo_flor),
+          id_evento: parseInt(id_evento),
+          id_fecha_especial: parseInt(id_fecha_especial) 
         };
 
         // Depurar los datos del producto antes de la creación
@@ -126,6 +127,7 @@ class ProductoController {
     });
   }
 
+  // Actualizar un producto
   static async actualizarProducto(req, res) {
     const { idProducto } = req.params;
 
@@ -154,7 +156,7 @@ class ProductoController {
       foto_ProductoPath = `./uploads/img/producto/${uniqueFileName}`;
     } else {
       // Si no hay nueva foto, mantener la foto actual
-      const existingProduct = await Producto.findByPk(idProducto);
+      const existingProduct = await Producto.obtenerProductoPorId(idProducto);
       foto_ProductoPath = existingProduct.foto_Producto; // Mantener la foto actual
       foto_ProductoURL = existingProduct.foto_ProductoURL; // Mantener la URL actual
     }

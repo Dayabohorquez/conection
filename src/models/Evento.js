@@ -1,5 +1,5 @@
 import { DataTypes, Model, QueryTypes } from 'sequelize';
-import { sequelize } from "../config/db.js";
+import { sequelize } from '../config/db.js';
 
 class Evento extends Model {
   // Método para crear un nuevo evento
@@ -51,9 +51,9 @@ class Evento extends Model {
   static async updateEvento(id_evento, nombre_evento, foto_evento, foto_eventoURL, descripcion) {
     try {
       await sequelize.query(
-        'CALL UpdateEvento(:id_evento, :nombre_evento, :foto_evento, :foto_eventoURL, :descripcion)',
+        'CALL UpdateEvento(:p_id_evento, :p_nombre_evento, :p_foto_evento, :p_foto_eventoURL, :p_descripcion)',
         {
-          replacements: { id_evento, nombre_evento, foto_evento, foto_eventoURL, descripcion },
+          replacements: { p_id_evento: id_evento, p_nombre_evento: nombre_evento, p_foto_evento: foto_evento, p_foto_eventoURL: foto_eventoURL, p_descripcion: descripcion },
           type: QueryTypes.RAW,
         }
       );
@@ -68,9 +68,9 @@ class Evento extends Model {
   static async deleteEvento(id_evento) {
     try {
       await sequelize.query(
-        'CALL DeleteEvento(:id_evento)',
+        'CALL DeleteEvento(:p_id_evento)',
         {
-          replacements: { id_evento },
+          replacements: { p_id_evento: id_evento },
           type: QueryTypes.RAW,
         }
       );

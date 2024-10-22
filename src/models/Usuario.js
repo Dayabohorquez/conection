@@ -10,9 +10,16 @@ class Usuario extends Model {
       usuario.contrasena_usuario = claveEncriptada;
 
       await sequelize.query(
-        'CALL CrearUsuario(:documento, :nombre_usuario, :apellido_usuario, :correo_electronico_usuario, :contrasena_usuario, :direccion, :fecha_registro, :estado_usuario)',
+        'CALL CrearUsuario(:nombre_usuario, :apellido_usuario, :correo_electronico_usuario, :contrasena_usuario, :direccion, :estado_usuario)',
         {
-          replacements: usuario,
+          replacements: {
+            nombre_usuario: usuario.nombre_usuario,
+            apellido_usuario: usuario.apellido_usuario,
+            correo_electronico_usuario: usuario.correo_electronico_usuario,
+            contrasena_usuario: usuario.contrasena_usuario,
+            direccion: usuario.direccion,
+            estado_usuario: usuario.estado_usuario,
+          },
           type: QueryTypes.RAW
         }
       );
@@ -27,7 +34,6 @@ class Usuario extends Model {
   static async getUsuarios() {
     try {
       const usuarios = await sequelize.query('CALL ObtenerUsuarios()', { type: QueryTypes.RAW });
-      console.log('Resultado de ObtenerUsuarios:', usuarios);
       return usuarios;
     } catch (error) {
       console.error(`Unable to find all usuarios: ${error}`);
@@ -45,11 +51,7 @@ class Usuario extends Model {
           type: QueryTypes.RAW
         }
       );
-      console.log('Resultado de ObtenerUsuarioPorId:', result);
-      if (result.length > 0) {
-        return Usuario.build(result[0]);
-      }
-      return null;
+      return result.length > 0 ? Usuario.build(result[0]) : null;
     } catch (error) {
       console.error(`Unable to find usuario by documento: ${error}`);
       throw error;
@@ -58,31 +60,23 @@ class Usuario extends Model {
 
   // Método para actualizar un usuario
   static async updateUsuario(documento, updated_usuario) {
-    return await sequelize.query(
-      'CALL ActualizarUsuario(:documento, :nombre_usuario, :apellido_usuario, :correo_electronico_usuario, :direccion)',
-      {
-        replacements: {
-          documento,
-          nombre_usuario: updated_usuario.nombre_usuario,
-          apellido_usuario: updated_usuario.apellido_usuario,
-          correo_electronico_usuario: updated_usuario.correo_electronico_usuario,
-          direccion: updated_usuario.direccion,
-        },
-        type: QueryTypes.RAW,
-      }
-    );
-  }
-
-  // Método para cambiar el estado de un usuario
-  static async toggleUsuarioState(documento) {
     try {
-      await sequelize.query('CALL CambiarEstadoUsuario(:documento)', {
-        replacements: { documento },
-        type: QueryTypes.RAW
-      });
-      return { message: 'Estado de usuario actualizado' };
+      await sequelize.query(
+        'CALL ActualizarUsuario(:documento, :nombre_usuario, :apellido_usuario, :correo_electronico_usuario, :direccion)',
+        {
+          replacements: {
+            documento,
+            nombre_usuario: updated_usuario.nombre_usuario,
+            apellido_usuario: updated_usuario.apellido_usuario,
+            correo_electronico_usuario: updated_usuario.correo_electronico_usuario,
+            direccion: updated_usuario.direccion
+          },
+          type: QueryTypes.RAW,
+        }
+      );
+      return { message: 'Usuario actualizado exitosamente' };
     } catch (error) {
-      console.error(`Unable to toggle usuario state: ${error}`);
+      console.error(`Unable to update usuario: ${error}`);
       throw error;
     }
   }
@@ -101,6 +95,34 @@ class Usuario extends Model {
         throw new Error('Rol no permitido.');
       }
       console.error(`Unable to update rol usuario: ${error}`);
+      throw error;
+    }
+  }
+
+  // Método para cambiar el estado de un usuario
+  static async toggleUsuarioState(documento) {
+    try {
+      await sequelize.query('CALL CambiarEstadoUsuario(:documento)', {
+        replacements: { documento },
+        type: QueryTypes.RAW
+      });
+      return { message: 'Estado de usuario actualizado' };
+    } catch (error) {
+      console.error(`Unable to toggle usuario state: ${error}`);
+      throw error;
+    }
+  }
+
+  // Método para buscar usuario por correo
+  static async buscarUsuarioPorCorreo(correo) {
+    try {
+      const result = await sequelize.query('CALL BuscarUsuarioPorCorreo(:correo)', {
+        replacements: { correo },
+        type: QueryTypes.RAW
+      });
+      return result.length > 0 ? result[0] : null;
+    } catch (error) {
+      console.error(`Error al buscar usuario por correo: ${error}`);
       throw error;
     }
   }
@@ -161,22 +183,21 @@ class Usuario extends Model {
         replacements: { token },
         type: QueryTypes.RAW
       });
-      return result[0];  // Devolver el mensaje y el documento
+      return result[0];
     } catch (error) {
       console.error(`Error en ValidarToken: ${error}`);
       throw error;
     }
   }
 
-  // Método para actualizar la contraseña usando el token
-  static async actualizarContrasena(token, nueva_contrasena) {
+  // Método para actualizar contraseña usando el token
+  static async actualizarContrasena(token, nuevaContrasena) {
     try {
-      const hashedPassword = await bcrypt.hash(nueva_contrasena, 10);
-      const result = await sequelize.query('CALL ActualizarContrasena(:token, :nueva_contrasena)', {
-        replacements: { token, nueva_contrasena: hashedPassword },
+      await sequelize.query('CALL ActualizarContrasena(:token, :nueva_contrasena)', {
+        replacements: { token, nueva_contrasena },
         type: QueryTypes.RAW
       });
-      return result[0];  // Devolver el mensaje
+      return { message: 'Contraseña actualizada con éxito' };
     } catch (error) {
       console.error(`Error en ActualizarContrasena: ${error}`);
       throw error;
@@ -200,7 +221,7 @@ Usuario.init({
     allowNull: false
   },
   correo_electronico_usuario: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(100),
     allowNull: false,
     unique: true,
   },
@@ -209,7 +230,7 @@ Usuario.init({
     allowNull: false
   },
   direccion: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(255),
     allowNull: true
   },
   fecha_registro: {
@@ -218,7 +239,8 @@ Usuario.init({
     allowNull: true
   },
   rol_usuario: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(50),
+    defaultValue: 'Cliente',
     allowNull: true
   },
   estado_usuario: {
@@ -226,11 +248,11 @@ Usuario.init({
     allowNull: false,
     defaultValue: true
   },
-  token_recuperacion: {  // Nuevo campo para el token de recuperación
-    type: DataTypes.STRING,
+  token_recuperacion: {
+    type: DataTypes.STRING(255),
     allowNull: true
   },
-  fecha_token: {  // Nuevo campo para la fecha de expiración del token
+  fecha_token: {
     type: DataTypes.DATE,
     allowNull: true
   }
