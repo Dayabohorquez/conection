@@ -7,7 +7,7 @@ const router = express.Router();
 // Obtener carrito de un usuario por documento
 router.get('/api/carrito/:documento', CarritoController.obtenerCarritoPorUsuarioId);
 
-router.get('/api/carrito/completo/:documento', CarritoController.ObtenerCarritoCompletoPorUsuarioId);
+router.get('/api/carrito/completo/:documento', CarritoController.obtenerCarritoCompletoPorUsuarioId);
 
 // Agregar un producto al carrito
 router.post('/api/carrito/agregar', CarritoController.agregarAlCarrito);

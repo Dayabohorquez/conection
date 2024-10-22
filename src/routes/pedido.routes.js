@@ -18,4 +18,13 @@ router.put('/api/pedidos/:id_pedido', PedidoController.actualizarPedido);
 // Cambiar el estado de un pedido
 router.patch('/api/pedidos/:id_pedido/estado', PedidoController.cambiarEstadoPedido);
 
+// Crear un ítem de pedido
+router.post('/api/pedidos/:id_pedido/items', PedidoController.crearPedidoItem);
+
+router.post('/api/pago-y-pedido', PedidoController.realizarPedido);
+
+
+// Obtener ítems de un pedido
+router.get('/api/pedidos/:id_pedido/items', PedidoController.obtenerItemsPorPedido);
+
 export default router;

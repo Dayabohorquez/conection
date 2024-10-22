@@ -8,7 +8,7 @@ const router = express.Router();
 router.get('/api/carrito-item/:id_carrito', CarritoItemController.obtenerItemsPorCarritoId);
 
 // Agregar un item al carrito
-router.post('/api/carrito-item/agregar', authenticateToken, CarritoItemController.agregarAlCarrito);
+router.post('/api/carrito-item/agregar', authenticateToken, CarritoItemController.agregarItemAlCarrito);
 
 // Actualizar la cantidad de un item en el carrito
 router.put('/api/carrito-item/actualizar/:id_carrito_item', CarritoItemController.actualizarCantidad);

@@ -52,14 +52,76 @@ class Pedido extends Model {
     }
   }
 
+  static async realizarPedido(pedidoData) {
+    const { documento, metodo_pago, subtotal_pago, total_pago, items } = pedidoData;
+
+    try {
+      // Llamar al procedimiento almacenado RealizarPedido
+      const result = await sequelize.query(
+        'CALL RealizarPedido(:documento, :metodo_pago, :subtotal_pago, :total_pago, :items)',
+        {
+          replacements: {
+            documento,
+            metodo_pago,
+            subtotal_pago,
+            total_pago,
+            items: JSON.stringify(items), // Convertir los ítems a formato JSON
+          },
+          type: QueryTypes.RAW,
+        }
+      );
+
+      return result; // Puedes retornar el resultado, que normalmente incluiría el ID del nuevo pedido
+    } catch (error) {
+      console.error('Error en realizarPedido (modelo):', error);
+      throw error;
+    }
+  }
+
+  static async crearPedidoItem(pedidoItemData) {
+    const { id_pedido, id_producto, cantidad, precio_unitario, opcion_adicional } = pedidoItemData;
+
+    try {
+      const result = await sequelize.query(
+        'CALL CrearPedidoItem(:id_pedido, :id_producto, :cantidad, :precio_unitario, :opcion_adicional)',
+        {
+          replacements: {
+            id_pedido,
+            id_producto,
+            cantidad,
+            precio_unitario,
+            opcion_adicional,
+          },
+          type: QueryTypes.RAW,
+        }
+      );
+
+      return result; // Devuelve el ID del nuevo pedido item
+    } catch (error) {
+      console.error('Error en crearPedidoItem (modelo):', error);
+      throw error;
+    }
+  }
+
+  static async obtenerItemsPorPedido(idPedido) {
+    try {
+      const items = await sequelize.query('CALL ObtenerItemsPorPedido(:id_pedido)', {
+        replacements: { id_pedido: idPedido },
+        type: QueryTypes.RAW,
+      });
+      return items; // Devuelve la lista de ítems para el pedido especificado
+    } catch (error) {
+      console.error(`Unable to fetch items for pedido: ${error}`);
+      throw error;
+    }
+  }
+
   static async actualizarPedido(idPedido, updatedData) {
     try {
-      // Verifica que idPedido sea un número
       if (isNaN(idPedido)) {
         throw new Error('ID del pedido no válido.');
       }
 
-      // Llamar al procedimiento almacenado
       const result = await sequelize.query(
         'CALL ActualizarPedido(:p_id_pedido, :p_fecha_pedido, :p_total_pagado, :p_documento, :p_pago_id)',
         {
@@ -83,13 +145,11 @@ class Pedido extends Model {
 
   static async actualizarEstadoPedido(idPedido, nuevoEstado) {
     try {
-      // Validar que el estado sea uno de los válidos
       const estadosValidos = ['Pendiente', 'Enviado', 'Entregado', 'Cancelado'];
       if (!estadosValidos.includes(nuevoEstado)) {
         throw new Error('Estado no válido. Debe ser uno de: ' + estadosValidos.join(', '));
       }
 
-      // Llamar al procedimiento almacenado
       const result = await sequelize.query(
         'CALL ActualizarEstadoPedido(:p_id_pedido, :nuevo_estado)',
         {

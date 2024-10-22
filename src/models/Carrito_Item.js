@@ -12,14 +12,13 @@ class CarritoItem extends Model {
       );
       return items;
     } catch (error) {
-      console.error(`Error al obtener items del carrito: ${error}`);
-      throw error;
+      console.error(`Error al obtener items del carrito: ${error.message}`);
+      throw new Error('Error al obtener items del carrito. Por favor, inténtalo de nuevo.');
     }
   }
 
-  static async addItemToCarrito(documento, id_producto, cantidad, dedicatoria, opcion_adicional, precio_adicional) {
+  static async agregarAlCarrito(documento, id_producto, cantidad, dedicatoria, opcion_adicional, precio_adicional) {
     try {
-      // Ejecutar el procedimiento almacenado
       await sequelize.query(
         'CALL AgregarItemAlCarrito(:documento, :id_producto, :cantidad, :dedicatoria, :opcion_adicional, :precio_adicional)',
         {
@@ -31,14 +30,13 @@ class CarritoItem extends Model {
             opcion_adicional,
             precio_adicional
           },
-          type: QueryTypes.RAW // Usar el tipo correcto
+          type: QueryTypes.RAW
         }
       );
-
-      return { message: 'Item agregado al carrito exitosamente' };
+      return { message: 'Producto agregado al carrito exitosamente' };
     } catch (error) {
-      console.error(`Error al agregar item al carrito: ${error.message}`);
-      throw new Error('Error al agregar item al carrito. Por favor, inténtalo de nuevo.');
+      console.error(`Error al agregar producto al carrito: ${error.message}`);
+      throw new Error('Error al agregar producto al carrito. Por favor, inténtalo de nuevo.');
     }
   }
 
@@ -50,8 +48,8 @@ class CarritoItem extends Model {
       );
       return { message: 'Cantidad actualizada exitosamente' };
     } catch (error) {
-      console.error(`Error al actualizar cantidad del item: ${error}`);
-      throw error;
+      console.error(`Error al actualizar cantidad del item: ${error.message}`);
+      throw new Error('Error al actualizar cantidad del item. Por favor, inténtalo de nuevo.');
     }
   }
 
@@ -63,8 +61,8 @@ class CarritoItem extends Model {
       );
       return { message: 'Item eliminado del carrito exitosamente' };
     } catch (error) {
-      console.error(`Error al eliminar item del carrito: ${error}`);
-      throw error;
+      console.error(`Error al eliminar item del carrito: ${error.message}`);
+      throw new Error('Error al eliminar item del carrito. Por favor, inténtalo de nuevo.');
     }
   }
 }
@@ -106,6 +104,7 @@ CarritoItem.init({
   timestamps: false
 });
 
+// Definir las asociaciones
 CarritoItem.belongsTo(Carrito, { foreignKey: 'id_carrito', onDelete: 'CASCADE' });
 CarritoItem.belongsTo(Producto, { foreignKey: 'id_producto', onDelete: 'CASCADE' });
 

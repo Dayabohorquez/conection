@@ -133,12 +133,9 @@ class Usuario extends Model {
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       console.log('Nuevo hash de contraseña:', hashedPassword); // Para depuración
 
-      const result = await sequelize.query(
-        'UPDATE Usuario SET contrasena_usuario = :newPassword WHERE documento = :documento',
-        {
-          replacements: { newPassword: hashedPassword, documento },
-          type: QueryTypes.RAW
-        }
+      const result = await Usuario.update(
+        { contrasena_usuario: hashedPassword },
+        { where: { documento } }
       );
 
       if (result[0] === 0) {
