@@ -1,23 +1,24 @@
+import cors from 'cors';
 import express from 'express';
 import fileUpload from 'express-fileupload';
-import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import serveIndex from 'serve-index';
 import fs from 'fs'; // Asegúrate de importar fs
+import path from 'path';
+import serveIndex from 'serve-index';
+import { fileURLToPath } from 'url';
 
 // Importa las rutas
-import usuarioRoutes from './routes/usuario.routes.js';
-import productoRoutes from './routes/producto.routes.js';
-import pedidoRoutes from './routes/pedido.routes.js';
-import pagoRoutes from './routes/pago.routes.js';
-import envioRoutes from './routes/envio.routes.js';
-import carritoRoutes from './routes/carro.routes.js';
-import eventoRoutes from './routes/evento.routes.js';
-import tipoFlorRoutes from './routes/tipoflor.routes.js';
-import fechaEspecialRoutes from './routes/fechaespecial.routes.js';
+import AuthRouter from './routes/AuthRouter.js';
 import carritoItemRoutes from './routes/carritoItemRoutes.js';
-import pedidoitemRoutes from './routes/pedidoItemRoutes.js'
+import carritoRoutes from './routes/carro.routes.js';
+import envioRoutes from './routes/envio.routes.js';
+import eventoRoutes from './routes/evento.routes.js';
+import fechaEspecialRoutes from './routes/fechaespecial.routes.js';
+import pagoRoutes from './routes/pago.routes.js';
+import pedidoRoutes from './routes/pedido.routes.js';
+import pedidoitemRoutes from './routes/pedidoItemRoutes.js';
+import productoRoutes from './routes/producto.routes.js';
+import tipoFlorRoutes from './routes/tipoflor.routes.js';
+import usuarioRoutes from './routes/usuario.routes.js';
 
 // Configuración de paths
 const __filename = fileURLToPath(import.meta.url);
@@ -46,13 +47,19 @@ app.get('/api/images/producto', (req, res) => {
     });
 });
 
+app.post('/api/reset-password', async (req, res) => {
+  const { token, nueva_contrasena } = req.body;
+  // Lógica para restablecer la contraseña
+});
+
+
 app.use('/uploads/img/pedido', serveIndex(path.join(__dirname, 'uploads/img/pedido'), { icons: true }));
 app.use('/uploads/img/fecha_especial', serveIndex(path.join(__dirname, 'uploads/img/fecha_especial'), { icons: true }));
 app.use('/uploads/img/tipo_flor', serveIndex(path.join(__dirname, 'uploads/img/tipo_flor'), { icons: true }));
 app.use('/uploads/img/evento', serveIndex(path.join(__dirname, 'uploads/img/evento'), { icons: true }));
 
 // Monta las rutas con rutas base
-app.use(usuarioRoutes, productoRoutes, pedidoRoutes, pedidoitemRoutes, carritoItemRoutes, pagoRoutes, envioRoutes, carritoRoutes, eventoRoutes, tipoFlorRoutes, fechaEspecialRoutes);
+app.use(usuarioRoutes, productoRoutes, pedidoRoutes, pedidoitemRoutes, carritoItemRoutes, pagoRoutes, envioRoutes, carritoRoutes, eventoRoutes, tipoFlorRoutes, fechaEspecialRoutes, AuthRouter);
 
 // Middleware para manejo de errores
 app.use((err, req, res, next) => {
