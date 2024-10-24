@@ -99,6 +99,24 @@ class Usuario extends Model {
     }
   }
 
+  static async agregarDireccion(documento, direccion) {
+    try {
+      // Verifica que los valores sean correctos
+      console.log('Documento:', documento);
+      console.log('Dirección:', direccion);
+
+      await sequelize.query('CALL UpdateDireccionUsuario(:documento, :direccion)', {
+        replacements: {
+          documento: parseInt(documento, 10), // Convierte a entero si es necesario
+          direccion: direccion // Asegúrate de que esto tenga el valor correcto
+        },
+        type: sequelize.QueryTypes.RAW
+      });
+    } catch (error) {
+      throw new Error('Error al agregar la dirección del usuario: ' + error.message);
+    }
+  }
+
   // Método para cambiar el estado de un usuario
   static async toggleUsuarioState(documento) {
     try {

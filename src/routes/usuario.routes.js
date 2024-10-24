@@ -2,6 +2,7 @@ import { Router } from 'express';
 import UsuarioController from '../controllers/usuario.controller.js';
 import RegisterController from '../controllers/register.controller.js';
 import LoginController from '../controllers/login.controller.js';
+import {authenticateToken} from '../middleware/login.middleware.js';
 
 const router = Router();
 
@@ -37,6 +38,9 @@ router.get('/api/usuario/validar-token/:token', UsuarioController.validarToken);
 
 // Actualizar la contraseña usando el token
 router.patch('/api/usuario/actualizar-contrasena/:token', UsuarioController.actualizarContrasena);
+
+router.post('/api/usuarios/:documento/direccion', UsuarioController.agregarDireccion);
+router.get('/api/:documento/direccion', UsuarioController.obtenerDireccionPorDocumento);
 
 // Registro de usuario
 router.post('/api/register', RegisterController.register);

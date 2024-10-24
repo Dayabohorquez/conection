@@ -149,6 +149,39 @@ class UsuarioController {
     }
   }
 
+  static async agregarDireccion(req, res) {
+    const { documento } = req.params; // Documento del usuario
+    const { direccion } = req.body; // Dirección que envía el frontend
+
+    try {
+      // Llama al método del modelo para agregar la dirección
+      await Usuario.agregarDireccion(documento, direccion); // Asegúrate de que 'direccion' no sea undefined
+
+      res.status(200).json({ message: 'Dirección agregada exitosamente' });
+    } catch (error) {
+      console.error('Error al agregar la dirección:', error);
+      res.status(500).json({ message: 'Error al agregar la dirección', error: error.message });
+    }
+  }
+
+  static async obtenerDireccionPorDocumento(req, res) {
+    const { documento } = req.params;
+
+    try {
+      // Aquí iría la lógica para obtener la dirección de la base de datos
+      const direccion = await Usuario.findOne({ where: { documento } }); // Asegúrate de que este modelo esté correctamente definido
+
+      if (!direccion) {
+        return res.status(404).json({ mensaje: 'Dirección no encontrada' });
+      }
+
+      res.json(direccion);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ mensaje: 'Error al obtener la dirección' });
+    }
+  }
+
   // Comparar contraseña
   static async compararContrasena(req, res) {
     console.log('Datos recibidos:', req.body);

@@ -9,8 +9,9 @@ router.get('/api/carrito/:documento', CarritoController.obtenerCarritoPorUsuario
 
 router.get('/api/carrito/completo/:documento', CarritoController.obtenerCarritoCompletoPorUsuarioId);
 
+
 // Agregar un producto al carrito
-router.post('/api/carrito/agregar', CarritoController.agregarAlCarrito);
+router.post('/api/carrito/agregar', authenticateToken, CarritoController.agregarAlCarrito);
 
 // Actualizar la cantidad de un producto en el carrito
 router.put('/api/carrito/actualizar/:id_carrito_item', CarritoController.actualizarCantidad);
