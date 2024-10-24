@@ -9,13 +9,13 @@ class Carrito extends Model {
         'CALL ObtenerCarritoPorUsuarioId(:documento)',
         { replacements: { documento }, type: QueryTypes.RAW }
       );
-      return result[0]; // Devuelve el primer conjunto de resultados
+      return result; // Devuelve el primer conjunto de resultados
     } catch (error) {
       console.error(`Error al obtener el carrito: ${error}`);
       throw error;
     }
   }
-
+  
   static async obtenerCarritoCompletoPorUsuarioId(documento) {
     try {
       const result = await sequelize.query(

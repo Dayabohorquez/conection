@@ -7,7 +7,7 @@ const router = express.Router();
 router.post('/pedido-item', PedidoItemController.crearPedidoItem);
 
 // Obtener todos los items de un pedido
-router.get('/pedido-item/:id_pedido', PedidoItemController.obtenerItemsPorPedido);
+router.get('/api/pedido/:id_pedido/items', PedidoItemController.obtenerItemsPorPedido);
 
 // Obtener un item de pedido por ID
 router.get('/pedido-item/id/:id_pedido_item', PedidoItemController.obtenerPedidoItemPorId);

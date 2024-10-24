@@ -20,11 +20,11 @@ class PedidoItem extends Model {
     }
   }
 
-  static async getItemsByPedido(id_pedido) {
+  static async getItemsByPedido(pedido_id) {
     try {
       const items = await sequelize.query(
-        'CALL ObtenerItemsPorPedido(:id_pedido)',
-        { replacements: { id_pedido }, type: QueryTypes.RAW }
+        'CALL GetPedidoItems(:pedido_id)',
+        { replacements: { pedido_id }, type: QueryTypes.RAW }
       );
       return items;
     } catch (error) {
@@ -110,6 +110,7 @@ PedidoItem.init({
   timestamps: false
 });
 
+// Definición de las relaciones
 PedidoItem.belongsTo(Pedido, { foreignKey: 'id_pedido', onDelete: 'CASCADE' });
 PedidoItem.belongsTo(Producto, { foreignKey: 'id_producto', onDelete: 'CASCADE' });
 

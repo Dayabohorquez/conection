@@ -13,17 +13,16 @@ class PedidoItemController {
       res.status(500).json({ message: 'Error al crear item de pedido', error });
     }
   }
-
-  // Obtener todos los items de un pedido
+  
   static async obtenerItemsPorPedido(req, res) {
-    const { id_pedido } = req.params;
+    const { id_pedido } = req.params; // Extraer id_pedido de los parámetros
 
     try {
-      const items = await PedidoItem.getItemsByPedido(id_pedido);
-      res.status(200).json(items);
+      const items = await PedidoItem.getItemsByPedido(id_pedido); // Llamar al método del modelo
+      res.status(200).json(items); // Responder con los items encontrados
     } catch (error) {
       console.error('Error al obtener items de pedido:', error);
-      res.status(500).json({ message: 'Error al obtener items de pedido', error });
+      res.status(500).json({ message: 'Error al obtener items de pedido', error }); // Responder con un error
     }
   }
 

@@ -57,53 +57,59 @@ class PedidoController {
     }
   }
 
-  static async realizarPedido(req, res) {
-    const { documento, metodo_pago, subtotal_pago, total_pago, items } = req.body;
-
-    // Validar datos
-    const missingFields = {
-        documento: !documento,
-        metodo_pago: !metodo_pago,
-        subtotal_pago: subtotal_pago == null,
-        total_pago: total_pago == null,
-        items: !Array.isArray(items) || items.length === 0,
-    };
-
-    if (Object.values(missingFields).some(field => field)) {
-        return res.status(400).json({ 
-            message: 'Datos incompletos para realizar el pedido.', 
-            missingFields 
-        });
-    }
-
-    // Asegurarse de que cada item tenga la estructura adecuada
-    for (const item of items) {
-        if (!item.id_producto || !item.cantidad || item.precio_unitario == null) {
-            return res.status(400).json({ 
-                message: 'Cada item debe tener un id_producto, cantidad y precio_unitario.', 
-                item 
-            });
-        }
-    }
+  static async obtenerHistorial(req, res) {
+    const { documento } = req.params; // Asegúrate de que estás pasando el documento en los parámetros de la ruta
 
     try {
-        const resultado = await Pedido.realizarPedido({
-            documento,
-            metodo_pago,
-            subtotal_pago,
-            total_pago,
-            items,
-        });
-
-        return res.status(201).json({
-            message: 'Pago y pedido creados exitosamente',
-            data: resultado,
-        });
+      const historial = await Pedido.obtenerHistorial(documento);
+      return res.status(200).json(historial);
     } catch (error) {
-        console.error('Error al procesar el pedido:', error);
-        return res.status(500).json({ message: 'Error al procesar el pedido', error });
+      console.error('Error en obtenerHistorial (controlador):', error);
+      return res.status(500).json({ message: 'Error al obtener el historial de pedidos.' });
     }
-}
+  }
+
+  static async realizarPedido(req, res) {
+    const { documento, metodo_pago, subtotal_pago, total_pago, items, direccion_envio } = req.body;
+
+    try {
+      // Validación de datos
+      if (documento === undefined ||
+        metodo_pago === undefined ||
+        subtotal_pago === undefined ||
+        total_pago === undefined ||
+        !Array.isArray(items) ||
+        items.length === 0 ||
+        !direccion_envio) {
+        return res.status(400).json({
+          mensaje: 'Faltan datos requeridos para realizar el pedido.',
+        });
+      }
+
+      // Verificar que todos los items tengan la estructura correcta
+      for (const item of items) {
+        if (!item.id_producto || !item.cantidad || !item.precio_unitario) {
+          return res.status(400).json({
+            mensaje: 'Cada item debe contener id_producto, cantidad y precio_unitario.',
+          });
+        }
+      }
+
+      // Llamada al modelo para realizar el pedido
+      const resultado = await Pedido.realizarPedido(documento, metodo_pago, subtotal_pago, total_pago, items, direccion_envio);
+
+      return res.status(201).json({
+        mensaje: 'Pedido realizado con éxito',
+        resultado,
+      });
+    } catch (error) {
+      console.error('Error al realizar el pedido:', error);
+      return res.status(500).json({
+        mensaje: 'Error al realizar el pedido. Por favor, inténtelo de nuevo más tarde.',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined, // Mostrar el error solo en desarrollo
+      });
+    }
+  }
 
   // Cambiar el estado de un pedido
   static async cambiarEstadoPedido(req, res) {

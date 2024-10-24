@@ -28,6 +28,23 @@ class Pedido extends Model {
     }
   }
 
+  static async obtenerHistorial(documento) {
+    try {
+      const result = await sequelize.query(
+        'CALL ObtenerHistorialPedidos(:documento)',
+        {
+          replacements: { documento },
+          type: QueryTypes.RAW,
+        }
+      );
+
+      return result; // Devuelve el resultado del procedimiento
+    } catch (error) {
+      console.error('Error en obtenerHistorial (modelo):', error);
+      throw error;
+    }
+  }
+
   static async crearPedido(pedidoData) {
     const { fecha_pedido, total_pagado, documento, pago_id } = pedidoData;
 
@@ -52,29 +69,61 @@ class Pedido extends Model {
     }
   }
 
-  static async realizarPedido(pedidoData) {
-    const { documento, metodo_pago, subtotal_pago, total_pago, items } = pedidoData;
+  static async realizarPedido(documento, metodo_pago, subtotal_pago, total_pago, items, direccion_envio) {
+    // Validación de parámetros
+    if (!documento || typeof documento !== 'number') {
+      throw new Error('El documento es requerido y debe ser un número.');
+    }
+    if (!metodo_pago || !['Nequi', 'Bancolombia', 'Efectivo'].includes(metodo_pago)) {
+      throw new Error('El método de pago es requerido y debe ser uno de: Nequi, Bancolombia, Efectivo.');
+    }
+    if (subtotal_pago === undefined || typeof subtotal_pago !== 'number') {
+      throw new Error('El subtotal de pago es requerido y debe ser un número.');
+    }
+    if (total_pago === undefined || typeof total_pago !== 'number') {
+      throw new Error('El total de pago es requerido y debe ser un número.');
+    }
+    if (!Array.isArray(items) || items.length === 0) {
+      throw new Error('Los items son requeridos y deben ser un arreglo.');
+    }
+    if (!direccion_envio || typeof direccion_envio !== 'string') {
+      throw new Error('La dirección de envío es requerida y debe ser una cadena.');
+    }
+
+    // Validar cada item en el arreglo
+    for (const item of items) {
+      if (!item.id_producto || !item.cantidad || !item.precio_unitario) {
+        throw new Error('Cada item debe contener id_producto, cantidad y precio_unitario.');
+      }
+      if (typeof item.cantidad !== 'number' || item.cantidad <= 0) {
+        throw new Error('La cantidad debe ser un número positivo.');
+      }
+      if (typeof item.precio_unitario !== 'number' || item.precio_unitario < 0) {
+        throw new Error('El precio unitario debe ser un número no negativo.');
+      }
+    }
 
     try {
-      // Llamar al procedimiento almacenado RealizarPedido
       const result = await sequelize.query(
-        'CALL RealizarPedido(:documento, :metodo_pago, :subtotal_pago, :total_pago, :items)',
+        'CALL RealizarPedido(:documento, :metodo_pago, :subtotal_pago, :total_pago, :items, :direccion_envio)',
         {
           replacements: {
             documento,
             metodo_pago,
             subtotal_pago,
             total_pago,
-            items: JSON.stringify(items), // Convertir los ítems a formato JSON
+            items: JSON.stringify(items),
+            direccion_envio,
           },
           type: QueryTypes.RAW,
+          nest: true,  // Esto permite que el resultado sea anidado
         }
       );
 
-      return result; // Puedes retornar el resultado, que normalmente incluiría el ID del nuevo pedido
+      return result;
     } catch (error) {
       console.error('Error en realizarPedido (modelo):', error);
-      throw error;
+      throw new Error('Error al realizar el pedido. Por favor, inténtelo de nuevo más tarde.');
     }
   }
 

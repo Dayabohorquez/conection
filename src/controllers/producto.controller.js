@@ -39,8 +39,10 @@ class ProductoController {
   // Obtener productos por tipo de flor
   static async obtenerProductosPorTipoFlor(req, res) {
     const { tipoFlorId } = req.params;
+    const limit = parseInt(req.query.limit) || 5;  // Límite por defecto a 5
+    const offset = parseInt(req.query.offset) || 0; // Desplazamiento por defecto a 0
     try {
-      const productos = await Producto.obtenerProductosPorTipoFlor(tipoFlorId);
+      const productos = await Producto.obtenerProductosPorTipoFlor(tipoFlorId, limit, offset);
       if (!productos.length) {
         return res.status(404).json({ message: 'No se encontraron productos para este tipo de flor' });
       }
@@ -54,8 +56,10 @@ class ProductoController {
   // Obtener productos por fecha especial
   static async obtenerProductosPorFechaEspecial(req, res) {
     const { fechaEspecialId } = req.params;
+    const limit = parseInt(req.query.limit) || 5;  // Límite por defecto a 5
+    const offset = parseInt(req.query.offset) || 0; // Desplazamiento por defecto a 0
     try {
-      const productos = await Producto.obtenerProductosPorFechaEspecial(fechaEspecialId);
+      const productos = await Producto.obtenerProductosPorFechaEspecial(fechaEspecialId, limit, offset);
       if (!productos.length) {
         return res.status(404).json({ message: 'No se encontraron productos para esta fecha especial' });
       }
@@ -94,7 +98,7 @@ class ProductoController {
           cantidad_disponible,
           id_tipo_flor,
           id_evento,
-          id_fecha_especial 
+          id_fecha_especial
         } = req.body;
 
         if (!codigo_producto || !nombre_producto || !descripcion_producto || !precio_producto ||
@@ -112,7 +116,7 @@ class ProductoController {
           cantidad_disponible: parseInt(cantidad_disponible),
           id_tipo_flor: parseInt(id_tipo_flor),
           id_evento: parseInt(id_evento),
-          id_fecha_especial: parseInt(id_fecha_especial) 
+          id_fecha_especial: parseInt(id_fecha_especial)
         };
 
         // Depurar los datos del producto antes de la creación
@@ -172,7 +176,7 @@ class ProductoController {
       cantidad_disponible,
       id_tipo_flor,
       id_evento,
-      id_fecha_especial 
+      id_fecha_especial
     };
 
     try {
@@ -186,7 +190,7 @@ class ProductoController {
 
   // Cambiar estado de un producto (activado/desactivado)
   static async cambiarEstadoProducto(req, res) {
-    const { idProducto } = req.params; 
+    const { idProducto } = req.params;
     const { estado } = req.body;
 
     try {

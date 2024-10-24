@@ -29,13 +29,16 @@ class Producto extends Model {
     }
   }
 
-  // Obtener productos por tipo de flor
-  static async obtenerProductosPorTipoFlor(tipoFlorId) {
+  // Obtener productos por tipo de flor con paginación
+  static async obtenerProductosPorTipoFlor(tipoFlorId, limit = 5, offset = 0) {
     try {
-      const productos = await sequelize.query('CALL ObtenerProductosPorTipoFlor(:tipoFlorId)', {
-        replacements: { tipoFlorId },
-        type: QueryTypes.RAW
-      });
+      const productos = await sequelize.query(
+        'CALL ObtenerProductosPorTipoFlor(:tipoFlorId, :limit, :offset)',
+        {
+          replacements: { tipoFlorId, limit, offset },
+          type: QueryTypes.RAW
+        }
+      );
       return productos;
     } catch (error) {
       console.error(`No se pudieron obtener productos por tipo de flor: ${error}`);
@@ -43,13 +46,16 @@ class Producto extends Model {
     }
   }
 
-  // Obtener productos por fecha especial
-  static async obtenerProductosPorFechaEspecial(fechaEspecialId) {
+  // Obtener productos por fecha especial con paginación
+  static async obtenerProductosPorFechaEspecial(fechaEspecialId, limit = 5, offset = 0) {
     try {
-      const productos = await sequelize.query('CALL ObtenerProductosPorFechaEspecial(:fechaEspecialId)', {
-        replacements: { fechaEspecialId },
-        type: QueryTypes.RAW
-      });
+      const productos = await sequelize.query(
+        'CALL ObtenerProductosPorFechaEspecial(:fechaEspecialId, :limit, :offset)',
+        {
+          replacements: { fechaEspecialId, limit, offset },
+          type: QueryTypes.RAW
+        }
+      );
       return productos;
     } catch (error) {
       console.error(`No se pudieron obtener productos por fecha especial: ${error}`);
