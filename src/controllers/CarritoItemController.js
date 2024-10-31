@@ -1,10 +1,8 @@
 import CarritoItem from '../models/Carrito_Item.js';
 import Carrito from '../models/Carrito.js';
-import Usuario from '../models/Usuario.js';
-import CarritoController from '../controllers/carro.controller.js';
 
 class CarritoItemController {
-  // Obtener todos los items del carrito
+  // Obtener todos los items del carrito por ID de carrito
   static async obtenerItemsPorCarritoId(req, res) {
     const { id_carrito } = req.params;
     try {
@@ -26,7 +24,7 @@ class CarritoItemController {
         return res.status(404).json({ message: 'Carrito no encontrado' });
       }
 
-      const items = await CarritoItem.findAll({ where: { id_carrito: carrito.id_carrito } });
+      const items = await CarritoItem.getItemsByCarritoId(carrito.id_carrito);
       res.status(200).json(items);
     } catch (error) {
       console.error('Error al obtener los items del carrito:', error.message);
@@ -35,21 +33,17 @@ class CarritoItemController {
   }
 
   static async agregarItemAlCarrito(req, res) {
-    const { id_producto, cantidad, dedicatoria, opcion_adicional, precio_adicional } = req.body;
-    const documento = parseInt(req.user?.documento, 10);
-
-    if (isNaN(documento)) {
-      return res.status(400).json({ message: 'Documento no proporcionado o inválido' });
-    }
+    console.log(req.body); // Para verificar lo que se recibe
+    const { documento, id_producto, cantidad, dedicatoria, id_opcion } = req.body;
 
     try {
-      const result = await CarritoItem.agregarAlCarrito(documento, id_producto, cantidad, dedicatoria, opcion_adicional, precio_adicional);
-      res.status(201).json(result);
+        await CarritoItem.agregarAlCarrito(documento, id_producto, cantidad, dedicatoria, id_opcion);
+        res.status(200).json({ message: 'Producto añadido al carrito' });
     } catch (error) {
-      console.error('Error al agregar producto al carrito:', error.message);
-      res.status(500).json({ message: 'Error al agregar producto al carrito', error: error.message });
+        console.error('Error al agregar al carrito:', error);
+        res.status(500).json({ message: 'Error al agregar al carrito', error });
     }
-  }
+}
 
   // Actualizar la cantidad de un item en el carrito
   static async actualizarCantidad(req, res) {

@@ -2,44 +2,47 @@ import { DataTypes, Model, QueryTypes } from 'sequelize';
 import { sequelize } from "../config/db.js";
 import Carrito from './Carrito.js';
 import Producto from './Producto.js';
+import OpcionAdicional from './Opciones_adicionales.js';
 
 class CarritoItem extends Model {
+  // Obtener items por ID de carrito
   static async getItemsByCarritoId(id_carrito) {
     try {
       const items = await sequelize.query(
         'CALL ObtenerCarritoItemsPorCarritoId(:id_carrito)',
         { replacements: { id_carrito }, type: QueryTypes.RAW }
       );
-      return items;
+      return items[0]; // Asegurarse de devolver la primera fila de resultados
     } catch (error) {
       console.error(`Error al obtener items del carrito: ${error.message}`);
       throw new Error('Error al obtener items del carrito. Por favor, inténtalo de nuevo.');
     }
   }
 
-  static async agregarAlCarrito(documento, id_producto, cantidad, dedicatoria, opcion_adicional, precio_adicional) {
+  // Agregar un producto al carrito
+  static async agregarAlCarrito(documento, id_producto, cantidad, dedicatoria, id_opcion) {
     try {
-      await sequelize.query(
-        'CALL AgregarItemAlCarrito(:documento, :id_producto, :cantidad, :dedicatoria, :opcion_adicional, :precio_adicional)',
-        {
-          replacements: {
-            documento,
-            id_producto,
-            cantidad,
-            dedicatoria,
-            opcion_adicional,
-            precio_adicional
-          },
-          type: QueryTypes.RAW
-        }
-      );
-      return { message: 'Producto agregado al carrito exitosamente' };
+        await sequelize.query(
+            'CALL AgregarItemAlCarrito(:documento, :id_producto, :cantidad, :dedicatoria, :id_opcion)',
+            {
+                replacements: {
+                    documento, // Verifica que este valor se está pasando
+                    id_producto,
+                    cantidad,
+                    dedicatoria,
+                    id_opcion,
+                },
+                type: QueryTypes.RAW,
+            }
+        );
+        return { message: 'Producto agregado al carrito exitosamente' };
     } catch (error) {
-      console.error(`Error al agregar producto al carrito: ${error.message}`);
-      throw new Error('Error al agregar producto al carrito. Por favor, inténtalo de nuevo.');
+        console.error(`Error al agregar al carrito: ${error}`);
+        throw error;
     }
-  }
+}
 
+  // Actualizar la cantidad de un item en el carrito
   static async updateItemQuantity(id_carrito_item, cantidad) {
     try {
       await sequelize.query(
@@ -53,6 +56,7 @@ class CarritoItem extends Model {
     }
   }
 
+  // Eliminar un item del carrito
   static async deleteItemFromCarrito(id_carrito_item) {
     try {
       await sequelize.query(
@@ -67,6 +71,7 @@ class CarritoItem extends Model {
   }
 }
 
+// Inicialización del modelo
 CarritoItem.init({
   id_carrito_item: {
     type: DataTypes.INTEGER,
@@ -91,7 +96,7 @@ CarritoItem.init({
     allowNull: true
   },
   opcion_adicional: {
-    type: DataTypes.ENUM('Ninguno', 'Vino', 'Chocolates'),
+    type: DataTypes.INTEGER, // Cambiado a INTEGER para coincidir con la estructura de la tabla
     allowNull: true
   },
   precio_adicional: {
@@ -104,8 +109,10 @@ CarritoItem.init({
   timestamps: false
 });
 
-// Definir las asociaciones
+// Definir asociaciones
 CarritoItem.belongsTo(Carrito, { foreignKey: 'id_carrito', onDelete: 'CASCADE' });
 CarritoItem.belongsTo(Producto, { foreignKey: 'id_producto', onDelete: 'CASCADE' });
+// Agregando asociación para opcion_adicional
+CarritoItem.belongsTo(OpcionAdicional, { foreignKey: 'opcion_adicional', onDelete: 'SET NULL' });
 
 export default CarritoItem;

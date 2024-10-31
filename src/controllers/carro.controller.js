@@ -46,16 +46,17 @@ class CarritoController {
 
   // Agregar un producto al carrito
   static async agregarAlCarrito(req, res) {
-    const { documento, id_producto, cantidad } = req.body;
-
+    const { documento, id_producto, cantidad, id_opcion } = req.body;
+  
     try {
-      await Carrito.agregarAlCarrito(documento, id_producto, cantidad);
+      await Carrito.agregarAlCarrito(documento, id_producto, cantidad, id_opcion);
       res.status(200).json({ message: 'Producto añadido al carrito' });
     } catch (error) {
       console.error('Error al agregar al carrito:', error);
-      res.status(500).json({ message: 'Error al agregar al carrito', error });
+      res.status(500).json({ message: 'Error al agregar al carrito', error: error.message });
     }
   }
+  
 
   // Actualizar la cantidad de un producto en el carrito
   static async actualizarCantidad(req, res) {
@@ -71,16 +72,21 @@ class CarritoController {
     }
   }
 
-  static async actualizarCarritoItem(req, res) {
-    const { itemId } = req.params;
+  static async actualizarItem(req, res) {
     const { opcion_adicional, dedicatoria } = req.body;
+    const id_carrito_item = req.params.itemId;
+
+    console.log('Datos recibidos:', { id_carrito_item, opcion_adicional, dedicatoria });
+
+    // Asegúrate de que `opcion_adicional` tenga un valor válido
+    const opcionAdicionalValue = (opcion_adicional === undefined || opcion_adicional === null) ? null : opcion_adicional;
 
     try {
-      await Carrito.actualizarCarritoItem(itemId, opcion_adicional, dedicatoria);
-      res.status(200).json({ message: 'Carrito item actualizado correctamente.' });
+      const resultado = await Carrito.actualizarCarritoItem(id_carrito_item, opcionAdicionalValue, dedicatoria);
+      return res.status(200).json(resultado);
     } catch (error) {
-      console.error('Error al actualizar el carrito item:', error);
-      res.status(500).json({ message: 'Error al actualizar el carrito item.', error: error.message });
+      console.error('Error en actualizarItem:', error);
+      return res.status(500).json({ error: error.message });
     }
   }
 

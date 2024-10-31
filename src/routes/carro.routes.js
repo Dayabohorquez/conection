@@ -14,11 +14,11 @@ router.get('/api/carrito/completo/:documento', CarritoController.obtenerCarritoC
 router.post('/api/carrito/agregar', authenticateToken, CarritoController.agregarAlCarrito);
 
 // Actualizar la cantidad de un producto en el carrito
-router.put('/api/carrito/actualizar/:id_carrito_item', CarritoController.actualizarCantidad);
+router.put('/api/carrito/actualizarc/:id_carrito_item', CarritoController.actualizarCantidad);
 
 router.put('/api/actualizarTotal/:id_carrito', CarritoController.actualizarTotalCarrito);
 
-router.put('/api/carritos/actualizar/:itemId', CarritoController.actualizarCarritoItem);
+router.put('/api/carritos/actualizar/:itemId', CarritoController.actualizarItem);
 
 // Eliminar un producto del carrito
 router.delete('/api/carrito/eliminar/:id_carrito_item', CarritoController.eliminarDelCarrito);

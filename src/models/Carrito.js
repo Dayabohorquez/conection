@@ -15,7 +15,7 @@ class Carrito extends Model {
       throw error;
     }
   }
-  
+
   static async obtenerCarritoCompletoPorUsuarioId(documento) {
     try {
       const result = await sequelize.query(
@@ -33,7 +33,10 @@ class Carrito extends Model {
     try {
       await sequelize.query(
         'CALL AgregarAlCarrito(:documento, :id_producto, :cantidad)',
-        { replacements: { documento, id_producto, cantidad }, type: QueryTypes.RAW }
+        {
+          replacements: { documento, id_producto, cantidad },
+          type: QueryTypes.RAW,
+        }
       );
       return { message: 'Producto agregado al carrito exitosamente' };
     } catch (error) {
@@ -41,7 +44,7 @@ class Carrito extends Model {
       throw error;
     }
   }
-
+  
   static async actualizarCantidadCarrito(id_carrito_item, cantidad) {
     try {
       await sequelize.query(
@@ -57,14 +60,21 @@ class Carrito extends Model {
 
   static async actualizarCarritoItem(id_carrito_item, opcion_adicional, dedicatoria) {
     try {
-      await sequelize.query(
-        'CALL ActualizarCarritoItem(:id_carrito_item, :opcion_adicional, :dedicatoria)',
-        { replacements: { id_carrito_item, opcion_adicional, dedicatoria }, type: QueryTypes.RAW }
+      const result = await sequelize.query(
+        'CALL ActualizarCarritoItem(:p_id_carrito_item, :p_opcion_adicional, :p_dedicatoria)',
+        {
+          replacements: {
+            p_id_carrito_item: id_carrito_item,
+            p_opcion_adicional: opcion_adicional, // Ahora puede ser null
+            p_dedicatoria: dedicatoria // Asegúrate de que este no sea undefined
+          },
+          type: QueryTypes.RAW
+        }
       );
-      return { message: 'Item del carrito actualizado exitosamente' };
+      return { message: 'Item del carrito actualizado exitosamente', result };
     } catch (error) {
-      console.error(`Error al actualizar el carrito item: ${error}`);
-      throw error;
+      console.error(`Error al actualizar el carrito item: ${error.message}`);
+      throw new Error('No se pudo actualizar el item del carrito');
     }
   }
 
@@ -132,10 +142,10 @@ class Carrito extends Model {
           type: QueryTypes.RAW,
         }
       );
-  
+
       console.log(result); // Para depuración
-  
-      return result
+
+      return result;
     } catch (error) {
       console.error(`Error al crear el carrito: ${error.message}`);
       throw new Error('No se pudo crear el carrito.');
@@ -153,12 +163,21 @@ Carrito.init({
   documento: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    references: {
+      model: Usuario,
+      key: 'documento'
+    }
   },
   fecha: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW, // Establece la fecha actual por defecto
   },
   total: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0.00,
+    allowNull: true
+  },
+  iva: {
     type: DataTypes.DECIMAL(10, 2),
     defaultValue: 0.00,
     allowNull: true

@@ -19,6 +19,7 @@ import pedidoitemRoutes from './routes/pedidoItemRoutes.js';
 import productoRoutes from './routes/producto.routes.js';
 import tipoFlorRoutes from './routes/tipoflor.routes.js';
 import usuarioRoutes from './routes/usuario.routes.js';
+import opcionadicionalRoutes from './routes/opcionadicionalRouter.js';
 
 // Configuración de paths
 const __filename = fileURLToPath(import.meta.url);
@@ -59,7 +60,7 @@ app.use('/uploads/img/tipo_flor', serveIndex(path.join(__dirname, 'uploads/img/t
 app.use('/uploads/img/evento', serveIndex(path.join(__dirname, 'uploads/img/evento'), { icons: true }));
 
 // Monta las rutas con rutas base
-app.use(usuarioRoutes, productoRoutes, pedidoRoutes, pedidoitemRoutes, carritoItemRoutes, pagoRoutes, envioRoutes, carritoRoutes, eventoRoutes, tipoFlorRoutes, fechaEspecialRoutes, AuthRouter);
+app.use(usuarioRoutes, productoRoutes, opcionadicionalRoutes, pedidoRoutes, pedidoitemRoutes, carritoItemRoutes, pagoRoutes, envioRoutes, carritoRoutes, eventoRoutes, tipoFlorRoutes, fechaEspecialRoutes, AuthRouter);
 
 // Middleware para manejo de errores
 app.use((err, req, res, next) => {

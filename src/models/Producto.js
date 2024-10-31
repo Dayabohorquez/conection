@@ -121,7 +121,6 @@ class Producto extends Model {
     foto_ProductoURL,
     descripcion_producto,
     precio_producto,
-    cantidad_disponible,
     id_tipo_flor,
     id_evento,
     id_fecha_especial
@@ -136,7 +135,6 @@ class Producto extends Model {
           :foto_ProductoURL,
           :descripcion_producto,
           :precio_producto,
-          :cantidad_disponible,
           :id_tipo_flor,
           :id_evento,
           :id_fecha_especial
@@ -149,7 +147,6 @@ class Producto extends Model {
           foto_ProductoURL: foto_ProductoURL || null,
           descripcion_producto,
           precio_producto,
-          cantidad_disponible,
           id_tipo_flor,
           id_evento,
           id_fecha_especial
@@ -163,6 +160,19 @@ class Producto extends Model {
       throw error;
     }
   }
+
+  static async actualizarCantidadDisponible(id_producto, nueva_cantidad) {
+    try {
+        await sequelize.query('CALL ActualizarCantidadDisponible(:id_producto, :nueva_cantidad)', {
+            replacements: { id_producto, nueva_cantidad },
+            type: QueryTypes.RAW
+        });
+        return { message: 'Cantidad disponible actualizada' };
+    } catch (error) {
+        console.error(`No se pudo actualizar la cantidad disponible: ${error}`);
+        throw error;
+    }
+}
 
   // Cambiar estado de un producto (activado/desactivado)
   static async cambiarEstadoProducto(id_producto, nuevo_estado) {

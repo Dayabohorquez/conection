@@ -45,6 +45,22 @@ class Pedido extends Model {
     }
   }
 
+  static async cancelarPedido(id_pedido) {
+    try {
+        const result = await sequelize.query(
+            'CALL CancelarPedido(:id_pedido)',
+            {
+                replacements: { id_pedido },
+                type: QueryTypes.RAW,
+            }
+        );
+        return result; // Devuelve el resultado del procedimiento
+    } catch (error) {
+        console.error('Error al cancelar el pedido (modelo):', error);
+        throw error;
+    }
+}
+
   static async crearPedido(pedidoData) {
     const { fecha_pedido, total_pagado, documento, pago_id } = pedidoData;
 
@@ -101,6 +117,9 @@ class Pedido extends Model {
       if (typeof item.precio_unitario !== 'number' || item.precio_unitario < 0) {
         throw new Error('El precio unitario debe ser un número no negativo.');
       }
+      if (item.opcion_adicional && typeof item.opcion_adicional !== 'string') {
+        throw new Error('La opción adicional debe ser una cadena si se proporciona.');
+      }
     }
 
     try {
@@ -112,11 +131,17 @@ class Pedido extends Model {
             metodo_pago,
             subtotal_pago,
             total_pago,
-            items: JSON.stringify(items),
+            items: JSON.stringify(items.map(item => ({
+              id_producto: item.id_producto,
+              cantidad: item.cantidad,
+              precio_unitario: item.precio_unitario,
+              dedicatoria: item.dedicatoria || null,  // Asigna null si no hay dedicatoria
+              opcion_adicional: item.opcion_adicional || null, // Asigna null si no hay opción
+            }))),
             direccion_envio,
           },
           type: QueryTypes.RAW,
-          nest: true,  // Esto permite que el resultado sea anidado
+          nest: true,
         }
       );
 
@@ -128,27 +153,28 @@ class Pedido extends Model {
   }
 
   static async crearPedidoItem(pedidoItemData) {
-    const { id_pedido, id_producto, cantidad, precio_unitario, opcion_adicional } = pedidoItemData;
+    const { id_pedido, id_producto, cantidad, precio_unitario, opcion_adicional, dedicatoria } = pedidoItemData;
 
     try {
       const result = await sequelize.query(
-        'CALL CrearPedidoItem(:id_pedido, :id_producto, :cantidad, :precio_unitario, :opcion_adicional)',
+        'CALL CrearPedidoItem(:id_pedido, :id_producto, :cantidad, :precio_unitario, :opcion_adicional, :dedicatoria)',
         {
           replacements: {
             id_pedido,
             id_producto,
             cantidad,
             precio_unitario,
-            opcion_adicional,
+            opcion_adicional: opcion_adicional || null,  // Asegúrate de que sea null si no hay opción
+            dedicatoria: dedicatoria || null,  // Asegúrate de que sea null si no hay dedicatoria
           },
           type: QueryTypes.RAW,
         }
       );
 
-      return result; // Devuelve el ID del nuevo pedido item
+      return result; // Devuelve el resultado del procedimiento
     } catch (error) {
       console.error('Error en crearPedidoItem (modelo):', error);
-      throw error;
+      throw new Error('Error al crear el item del pedido. Por favor, inténtelo de nuevo más tarde.');
     }
   }
 

@@ -18,6 +18,8 @@ router.post('/api/productos', ProductoController.crearProducto);
 // Actualizar producto
 router.put('/api/productos/:idProducto', ProductoController.actualizarProducto);
 
+router.patch('/api/productos/:idProducto/cantidad', ProductoController.actualizarCantidad);
+
 // Cambiar estado de un producto
 router.patch('/api/productos/:idProducto/estado', ProductoController.cambiarEstadoProducto);
 

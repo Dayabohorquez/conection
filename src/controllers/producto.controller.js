@@ -140,7 +140,6 @@ class ProductoController {
       nombre_producto,
       descripcion_producto,
       precio_producto,
-      cantidad_disponible,
       id_tipo_flor,
       id_evento,
       id_fecha_especial,
@@ -173,7 +172,6 @@ class ProductoController {
       foto_ProductoURL,
       descripcion_producto,
       precio_producto,
-      cantidad_disponible,
       id_tipo_flor,
       id_evento,
       id_fecha_especial
@@ -187,6 +185,29 @@ class ProductoController {
       res.status(500).json({ message: 'Error al actualizar producto', error });
     }
   }
+
+  static async actualizarCantidad(req, res) {
+    const { idProducto } = req.params;
+    const { nuevaCantidad } = req.body;
+
+    try {
+        const producto = await Producto.obtenerProductoPorId(idProducto);
+        if (!producto) {
+            return res.status(404).json({ message: 'Producto no encontrado' });
+        }
+
+        // Aquí puedes validar que la nueva cantidad sea válida
+        if (nuevaCantidad < 0) {
+            return res.status(400).json({ message: 'La cantidad no puede ser negativa' });
+        }
+
+        await Producto.actualizarCantidadDisponible(idProducto, nuevaCantidad);
+        return res.status(200).json({ message: 'Cantidad disponible actualizada', nuevaCantidad });
+    } catch (error) {
+        console.error('Error al actualizar cantidad de producto:', error);
+        return res.status(500).json({ message: 'Error al actualizar cantidad de producto', error: error.message });
+    }
+}
 
   // Cambiar estado de un producto (activado/desactivado)
   static async cambiarEstadoProducto(req, res) {

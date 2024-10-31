@@ -69,18 +69,32 @@ class PedidoController {
     }
   }
 
+  static async cancelarPedido(req, res) {
+        const { id_pedido } = req.params; // Asegúrate de que estás pasando el id del pedido en los parámetros de la ruta
+
+        try {
+            await Pedido.cancelarPedido(id_pedido);
+            return res.status(200).json({ message: 'Pedido cancelado con éxito.' });
+        } catch (error) {
+            console.error('Error en cancelarPedido (controlador):', error);
+            return res.status(500).json({ message: 'Error al cancelar el pedido.' });
+        }
+    }
+
   static async realizarPedido(req, res) {
     const { documento, metodo_pago, subtotal_pago, total_pago, items, direccion_envio } = req.body;
 
     try {
       // Validación de datos
-      if (documento === undefined ||
+      if (
+        documento === undefined ||
         metodo_pago === undefined ||
         subtotal_pago === undefined ||
         total_pago === undefined ||
         !Array.isArray(items) ||
         items.length === 0 ||
-        !direccion_envio) {
+        !direccion_envio
+      ) {
         return res.status(400).json({
           mensaje: 'Faltan datos requeridos para realizar el pedido.',
         });
@@ -91,6 +105,21 @@ class PedidoController {
         if (!item.id_producto || !item.cantidad || !item.precio_unitario) {
           return res.status(400).json({
             mensaje: 'Cada item debe contener id_producto, cantidad y precio_unitario.',
+          });
+        }
+        if (typeof item.cantidad !== 'number' || item.cantidad <= 0) {
+          return res.status(400).json({
+            mensaje: 'La cantidad debe ser un número positivo.',
+          });
+        }
+        if (typeof item.precio_unitario !== 'number' || item.precio_unitario < 0) {
+          return res.status(400).json({
+            mensaje: 'El precio unitario debe ser un número no negativo.',
+          });
+        }
+        if (item.opcion_adicional && typeof item.opcion_adicional !== 'string') {
+          return res.status(400).json({
+            mensaje: 'La opción adicional debe ser una cadena si se proporciona.',
           });
         }
       }
@@ -106,7 +135,51 @@ class PedidoController {
       console.error('Error al realizar el pedido:', error);
       return res.status(500).json({
         mensaje: 'Error al realizar el pedido. Por favor, inténtelo de nuevo más tarde.',
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined, // Mostrar el error solo en desarrollo
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      });
+    }
+  }
+
+  // Crear un ítem de pedido
+  static async crearPedidoItem(req, res) {
+    const { id_pedido } = req.params; // ID del pedido
+    const pedidoItemData = req.body; // Datos del ítem de pedido
+
+    try {
+      // Validación de datos
+      if (!pedidoItemData.id_producto || !pedidoItemData.cantidad || !pedidoItemData.precio_unitario) {
+        return res.status(400).json({
+          mensaje: 'El ítem de pedido debe contener id_producto, cantidad y precio_unitario.',
+        });
+      }
+      if (typeof pedidoItemData.cantidad !== 'number' || pedidoItemData.cantidad <= 0) {
+        return res.status(400).json({
+          mensaje: 'La cantidad debe ser un número positivo.',
+        });
+      }
+      if (typeof pedidoItemData.precio_unitario !== 'number' || pedidoItemData.precio_unitario < 0) {
+        return res.status(400).json({
+          mensaje: 'El precio unitario debe ser un número no negativo.',
+        });
+      }
+      if (pedidoItemData.opcion_adicional && typeof pedidoItemData.opcion_adicional !== 'string') {
+        return res.status(400).json({
+          mensaje: 'La opción adicional debe ser una cadena si se proporciona.',
+        });
+      }
+
+      pedidoItemData.id_pedido = id_pedido; // Asignar ID del pedido a los datos del ítem
+      const result = await Pedido.crearPedidoItem(pedidoItemData);
+      
+      return res.status(201).json({
+        mensaje: 'Ítem de pedido creado con éxito',
+        result,
+      });
+    } catch (error) {
+      console.error('Error al crear ítem de pedido:', error);
+      return res.status(500).json({
+        message: 'Error al crear ítem de pedido',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
       });
     }
   }
@@ -131,21 +204,6 @@ class PedidoController {
         return res.status(404).json({ message: error.message });
       }
       res.status(500).json({ message: 'Error al cambiar estado del pedido', error: error.message });
-    }
-  }
-
-  // Crear un ítem de pedido
-  static async crearPedidoItem(req, res) {
-    const { id_pedido } = req.params; // ID del pedido
-    const pedidoItemData = req.body; // Datos del ítem de pedido
-
-    try {
-      pedidoItemData.id_pedido = id_pedido; // Asignar ID del pedido a los datos del ítem
-      const result = await Pedido.crearPedidoItem(pedidoItemData);
-      res.status(201).json(result);
-    } catch (error) {
-      console.error('Error al crear ítem de pedido:', error);
-      res.status(500).json({ message: 'Error al crear ítem de pedido', error });
     }
   }
 

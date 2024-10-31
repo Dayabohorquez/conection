@@ -23,6 +23,8 @@ router.post('/api/pedidos/:id_pedido/items', PedidoController.crearPedidoItem);
 
 router.post('/api/pago-y-pedido', PedidoController.realizarPedido);
 
+router.put('/api/pedidos/cancelar/:id_pedido', PedidoController.cancelarPedido);
+
 router.get('/api/historial/:documento', PedidoController.obtenerHistorial);
 
 // Obtener ítems de un pedido
