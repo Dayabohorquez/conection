@@ -1,6 +1,6 @@
+import bcrypt from 'bcrypt';
 import { DataTypes, Model, QueryTypes } from 'sequelize';
 import { sequelize } from '../config/db.js';
-import bcrypt from 'bcrypt';
 
 class Usuario extends Model {
   // Método para crear un usuario
@@ -44,19 +44,19 @@ class Usuario extends Model {
   // Método para obtener un usuario por documento
   static async getUsuarioById(documento) {
     try {
-      const result = await sequelize.query(
-        'CALL ObtenerUsuarioPorId(:documento)',
-        {
-          replacements: { documento },
-          type: QueryTypes.RAW
-        }
-      );
-      return result.length > 0 ? Usuario.build(result[0]) : null;
+        const result = await sequelize.query(
+            'CALL ObtenerUsuarioPorId(:documento)', 
+            {
+                replacements: { documento }, // Asegúrate de que `documento` esté aquí
+                type: QueryTypes.RAW
+            }
+        );
+        return result.length > 0 ? Usuario.build(result[0]) : null;
     } catch (error) {
-      console.error(`Unable to find usuario by documento: ${error}`);
-      throw error;
+        console.error(`Unable to find usuario by documento: ${error}`);
+        throw error;
     }
-  }
+}
 
   // Método para actualizar un usuario
   static async updateUsuario(documento, updated_usuario) {

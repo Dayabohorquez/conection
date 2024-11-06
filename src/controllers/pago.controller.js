@@ -1,4 +1,5 @@
 import Pago from '../models/Pago.js';
+import { sendNotification } from '../services/notificaciones.js';
 
 class PagoController {
   // Crear un nuevo pago
@@ -55,6 +56,13 @@ class PagoController {
 
     try {
       const result = await Pago.actualizarEstadoPago(id, estado_pago);
+      
+      // Verificar si el estado es "Fallido"
+      if (estado_pago === 'Fallido') {
+        const pago = await Pago.obtenerPagoPorId(id);
+        await sendNotification(pago); // Enviar notificación al administrador
+      }
+
       res.status(200).json(result);
     } catch (error) {
       console.error('Error al actualizar el estado del pago:', error);

@@ -1,5 +1,6 @@
 import Pedido from "../models/Pedido.js";
-import PedidoItem from "../models/Pedido_Item.js"; // Asegúrate de que este modelo esté definido
+import Usuario from "../models/Usuario.js";
+import { enviarNotificacionAdministrador } from '../services/notificaciones.js';
 
 class PedidoController {
   // Obtener todos los pedidos
@@ -69,17 +70,37 @@ class PedidoController {
     }
   }
 
-  static async cancelarPedido(req, res) {
-        const { id_pedido } = req.params; // Asegúrate de que estás pasando el id del pedido en los parámetros de la ruta
+  // Cancelar pedido
+static async cancelarPedido(req, res) {
+  console.log('Documento recibido:', req.user?.documento, req.body.documento, req.params.documento);
+  const { id_pedido } = req.params; // Obtener el id del pedido de los parámetros
+  const documento = req.user?.documento || req.body.documento || req.params.documento;
 
-        try {
-            await Pedido.cancelarPedido(id_pedido);
-            return res.status(200).json({ message: 'Pedido cancelado con éxito.' });
-        } catch (error) {
-            console.error('Error en cancelarPedido (controlador):', error);
-            return res.status(500).json({ message: 'Error al cancelar el pedido.' });
-        }
-    }
+  if (!documento) {
+      return res.status(400).json({ message: 'Documento no proporcionado.' });
+  }
+
+  try {
+      // Obtener el usuario asociado al pedido
+      const usuario = await Usuario.getUsuarioById(documento);
+      
+      // Verifica que el usuario exista
+      if (!usuario) {
+          return res.status(404).json({ message: 'Usuario no encontrado.' });
+      }
+
+      // Cancelar el pedido en la base de datos
+      await Pedido.cancelarPedido(id_pedido);
+
+      // Notificar al administrador con la información completa del usuario
+      await enviarNotificacionAdministrador(`El pedido registrado número ${id_pedido} ha sido cancelado por el usuario ${usuario.nombre_usuario} ${usuario.apellido_usuario}, con número de identificación ${usuario.documento}.`);
+
+      return res.status(200).json({ message: 'Pedido cancelado con éxito y notificación enviada.' });
+  } catch (error) {
+      console.error('Error en cancelarPedido (controlador):', error);
+      return res.status(500).json({ message: 'Error al cancelar el pedido.' });
+  }
+}
 
   static async realizarPedido(req, res) {
     const { documento, metodo_pago, subtotal_pago, total_pago, items, direccion_envio } = req.body;
