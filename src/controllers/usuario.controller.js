@@ -1,5 +1,5 @@
-import Usuario from "../models/Usuario.js";
 import bcrypt from "bcrypt";
+import Usuario from "../models/Usuario.js";
 import { sendEmail } from '../utils/email.js'; // Asegúrate de importar la función de envío de correo
 
 class UsuarioController {
@@ -23,7 +23,7 @@ class UsuarioController {
     console.log(`Buscando usuario con documento: ${documento}`);
 
     try {
-      const usuario = await Usuario.getUsuarioById(documento);
+      const usuario = await Usuario.findOne({ where: { documento } });
       console.log('Resultado de getUsuarioById:', usuario);
 
       if (!usuario) {
