@@ -3,12 +3,14 @@ import { sequelize } from "../config/db.js";
 import Carrito from './Carrito.js';
 import Pago from './Pago.js';
 import Usuario from './Usuario.js';
+import Producto from './Producto.js';  // Importamos Producto para verificar el stock
+import moment from 'moment-timezone'; // Importamos moment-timezone para manejar zonas horarias
 
 class Pedido extends Model {
   static async obtenerPedidos() {
     try {
       const pedidos = await sequelize.query('CALL ObtenerPedidos()', { type: QueryTypes.RAW });
-      return pedidos; // Devuelve el primer elemento del array resultante
+      return pedidos;
     } catch (error) {
       console.error(`Unable to fetch pedidos: ${error}`);
       throw error;
@@ -21,10 +23,35 @@ class Pedido extends Model {
         replacements: { id_pedido: idPedido },
         type: QueryTypes.RAW,
       });
-      return pedido[0]; // Devuelve el primer elemento del array resultante
+      return pedido[0];
     } catch (error) {
       console.error(`Unable to find pedido by id: ${error}`);
       throw error;
+    }
+  }
+
+  // Cancelar pedido
+  static async cancelarPedido(id_pedido) {
+    try {
+      const id_pedido_int = parseInt(id_pedido, 10);  // Asegúrate de que el id sea un número entero
+
+      if (isNaN(id_pedido_int)) {
+        throw new Error('ID de pedido no válido');
+      }
+
+      // Llamada al procedimiento almacenado
+      const result = await sequelize.query(
+        'CALL CancelarPedido(:id_pedido)',  // :id_pedido es el parámetro que se pasa
+        {
+          replacements: { id_pedido: id_pedido_int },  // Asegúrate de pasar el número entero
+          type: QueryTypes.RAW,  // Usamos RAW si no necesitas procesar los resultados
+        }
+      );
+
+      return result; // El resultado puede ser utilizado si es necesario, por ejemplo, para registrar el éxito
+    } catch (error) {
+      console.error('Error al cancelar el pedido (modelo):', error);
+      throw error; // Lanza el error para ser manejado en el controlador
     }
   }
 
@@ -37,55 +64,48 @@ class Pedido extends Model {
           type: QueryTypes.RAW,
         }
       );
-
-      return result; // Devuelve el resultado del procedimiento
+      return result;
     } catch (error) {
       console.error('Error en obtenerHistorial (modelo):', error);
       throw error;
     }
   }
 
-  static async cancelarPedido(id_pedido) {
-    try {
-        const result = await sequelize.query(
-            'CALL CancelarPedido(:id_pedido)',
-            {
-                replacements: { id_pedido },
-                type: QueryTypes.RAW,
-            }
-        );
-        return result; // Devuelve el resultado del procedimiento
-    } catch (error) {
-        console.error('Error al cancelar el pedido (modelo):', error);
-        throw error;
-    }
-}
-
   static async crearPedido(pedidoData) {
-    const { fecha_pedido, total_pagado, documento, pago_id } = pedidoData;
+    const { fecha_pedido, total_pagado, documento, pago_id, direccion_envio, fecha_entrega } = pedidoData;
 
     try {
       const result = await sequelize.query(
-        'CALL CrearPedido(:fecha_pedido, :total_pagado, :documento, :pago_id)',
+        'CALL CrearPedido(:fecha_pedido, :total_pagado, :documento, :pago_id, :direccion_envio, :fecha_entrega)',
         {
           replacements: {
             fecha_pedido,
             total_pagado,
             documento,
             pago_id,
+            direccion_envio,
+            fecha_entrega,
           },
           type: QueryTypes.RAW,
         }
       );
-
-      return result; // Devuelve el ID del nuevo pedido
+      return result;
     } catch (error) {
       console.error('Error en crearPedido (modelo):', error);
       throw error;
     }
   }
 
-  static async realizarPedido(documento, metodo_pago, subtotal_pago, total_pago, items, direccion_envio) {
+  static async realizarPedido(
+    documento,
+    metodo_pago,
+    subtotal_pago,
+    total_pago,
+    items,
+    direccion_envio,
+    fecha_entrega,
+    fecha_pedido
+  ) {
     // Validación de parámetros
     if (!documento || typeof documento !== 'number') {
       throw new Error('El documento es requerido y debe ser un número.');
@@ -105,6 +125,17 @@ class Pedido extends Model {
     if (!direccion_envio || typeof direccion_envio !== 'string') {
       throw new Error('La dirección de envío es requerida y debe ser una cadena.');
     }
+    if (fecha_entrega && isNaN(Date.parse(fecha_entrega))) {
+      throw new Error('La fecha de entrega debe ser una fecha válida.');
+    }
+
+    // Convertir la fecha de entrega a la zona horaria de Bogotá (si se proporciona)
+    const fechaEntregaBogota = fecha_entrega
+      ? moment(fecha_entrega).tz("America/Bogota").startOf('day').format("YYYY-MM-DD")
+      : null;
+
+    // Convertir la fecha de pedido a la zona horaria de Bogotá (se usa el momento actual)
+    const fechaPedido = moment().tz("America/Bogota").format("YYYY-MM-DD HH:mm:ss");
 
     // Validar cada item en el arreglo
     for (const item of items) {
@@ -123,8 +154,9 @@ class Pedido extends Model {
     }
 
     try {
+      // Llamar al procedimiento almacenado para crear el pedido
       const result = await sequelize.query(
-        'CALL RealizarPedido(:documento, :metodo_pago, :subtotal_pago, :total_pago, :items, :direccion_envio)',
+        'CALL RealizarPedido(:documento, :metodo_pago, :subtotal_pago, :total_pago, :items, :direccion_envio, :fecha_entrega, :fecha_pedido)',
         {
           replacements: {
             documento,
@@ -135,16 +167,17 @@ class Pedido extends Model {
               id_producto: item.id_producto,
               cantidad: item.cantidad,
               precio_unitario: item.precio_unitario,
-              dedicatoria: item.dedicatoria || null,  // Asigna null si no hay dedicatoria
-              opcion_adicional: item.opcion_adicional || null, // Asigna null si no hay opción
+              dedicatoria: item.dedicatoria || null,
+              opcion_adicional: item.opcion_adicional || null,
             }))),
             direccion_envio,
+            fecha_entrega: fechaEntregaBogota, // Fecha ajustada
+            fecha_pedido: fechaPedido, // Fecha de pedido ajustada
           },
           type: QueryTypes.RAW,
           nest: true,
         }
       );
-
       return result;
     } catch (error) {
       console.error('Error en realizarPedido (modelo):', error);
@@ -164,14 +197,13 @@ class Pedido extends Model {
             id_producto,
             cantidad,
             precio_unitario,
-            opcion_adicional: opcion_adicional || null,  // Asegúrate de que sea null si no hay opción
-            dedicatoria: dedicatoria || null,  // Asegúrate de que sea null si no hay dedicatoria
+            opcion_adicional: opcion_adicional || null,
+            dedicatoria: dedicatoria || null,
           },
           type: QueryTypes.RAW,
         }
       );
-
-      return result; // Devuelve el resultado del procedimiento
+      return result;
     } catch (error) {
       console.error('Error en crearPedidoItem (modelo):', error);
       throw new Error('Error al crear el item del pedido. Por favor, inténtelo de nuevo más tarde.');
@@ -184,7 +216,7 @@ class Pedido extends Model {
         replacements: { id_pedido: idPedido },
         type: QueryTypes.RAW,
       });
-      return items; // Devuelve la lista de ítems para el pedido especificado
+      return items;
     } catch (error) {
       console.error(`Unable to fetch items for pedido: ${error}`);
       throw error;
@@ -236,7 +268,7 @@ class Pedido extends Model {
       return { message: 'Estado del pedido actualizado exitosamente' };
     } catch (error) {
       console.error('Error en actualizarEstadoPedido (modelo):', error.message);
-      throw error; // Propagar el error
+      throw error;
     }
   }
 }
@@ -261,13 +293,17 @@ Pedido.init({
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
   },
+  fecha_entrega: {
+    type: DataTypes.DATE,
+    allowNull: false,
+  }
 }, {
   sequelize,
   tableName: 'Pedido',
   timestamps: false,
 });
 
-// Definición de relaciones
+// Relaciones
 Pedido.belongsTo(Usuario, { foreignKey: 'documento' });
 Pedido.belongsTo(Pago, { foreignKey: 'pago_id' });
 Pedido.belongsTo(Carrito, { foreignKey: 'id_carrito' });

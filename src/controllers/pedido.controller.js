@@ -1,6 +1,8 @@
 import Pedido from "../models/Pedido.js";
-import Usuario from "../models/Usuario.js";
 import { enviarNotificacionAdministrador } from '../services/notificaciones.js';
+import moment from 'moment-timezone';  // Para manejar la zona horaria
+import Producto from "../models/Producto.js";
+import Usuario from "../models/Usuario.js";
 
 class PedidoController {
   // Obtener todos los pedidos
@@ -17,30 +19,15 @@ class PedidoController {
   // Obtener un pedido por ID
   static async obtenerPedidoPorId(req, res) {
     const { id } = req.params;
-
     try {
       const pedido = await Pedido.obtenerPedidoPorId(id);
-
       if (!pedido || pedido.length === 0) {
         return res.status(404).json({ message: 'Pedido no encontrado' });
       }
-
       return res.status(200).json(pedido);
     } catch (error) {
       console.error('Error al obtener el pedido:', error);
       return res.status(500).json({ message: 'Error al obtener el pedido', error });
-    }
-  }
-
-  // Crear un pedido
-  static async crearPedido(req, res) {
-    try {
-      const pedidoData = req.body; // Asegúrate de que los datos se envíen en el cuerpo de la solicitud
-      const result = await Pedido.crearPedido(pedidoData);
-      res.status(201).json(result);
-    } catch (error) {
-      console.error('Error al crear pedido:', error);
-      res.status(500).json({ message: 'Error al crear pedido', error });
     }
   }
 
@@ -58,55 +45,88 @@ class PedidoController {
     }
   }
 
-  static async obtenerHistorial(req, res) {
-    const { documento } = req.params; // Asegúrate de que estás pasando el documento en los parámetros de la ruta
+  static async cancelarPedido(req, res) {
+    console.log('Documento recibido:', req.user?.documento, req.body.documento, req.params.documento);
 
+    // Obtener el id del pedido desde los parámetros de la URL
+    const { id_pedido } = req.params;
+
+    // Asegúrate de que id_pedido sea un número entero válido
+    const id_pedido_int = parseInt(id_pedido, 10);
+    if (isNaN(id_pedido_int)) {
+      return res.status(400).json({ message: 'ID de pedido no válido' });
+    }
+
+    // Obtener el documento del usuario que está haciendo la solicitud
+    const documento = req.user?.documento || req.body.documento || req.params.documento;
+
+    if (!documento) {
+      return res.status(400).json({ message: 'Documento no proporcionado.' });
+    }
+
+    try {
+      // Obtener el usuario asociado al documento
+      const usuario = await Usuario.getUsuarioById(documento);
+
+      // Verifica que el usuario exista
+      if (!usuario) {
+        return res.status(404).json({ message: 'Usuario no encontrado.' });
+      }
+
+      // Llamar al método del modelo para cancelar el pedido
+      await Pedido.cancelarPedido(id_pedido_int); // Pasar el id_pedido como número entero
+
+      // Notificar al administrador (opcional)
+      await enviarNotificacionAdministrador(`El pedido registrado número ${id_pedido_int} ha sido cancelado por el usuario ${usuario.nombre_usuario} ${usuario.apellido_usuario}, con número de identificación ${usuario.documento}.`);
+
+      // Responder con éxito
+      return res.status(200).json({ message: 'Pedido cancelado con éxito y notificación enviada.' });
+    } catch (error) {
+      console.error('Error en cancelarPedido (controlador):', error);
+      return res.status(500).json({ message: 'Error al cancelar el pedido.' });
+    }
+  }
+
+  // Controlador para obtener el historial de pedidos de un usuario
+  static async obtenerHistorial(req, res) {
+    const { documento } = req.params;
     try {
       const historial = await Pedido.obtenerHistorial(documento);
       return res.status(200).json(historial);
     } catch (error) {
-      console.error('Error en obtenerHistorial (controlador):', error);
-      return res.status(500).json({ message: 'Error al obtener el historial de pedidos.' });
+      console.error('Error al obtener historial:', error);
+      return res.status(500).json({ message: 'Error al obtener el historial de pedidos.', error });
     }
   }
 
-  // Cancelar pedido
-static async cancelarPedido(req, res) {
-  console.log('Documento recibido:', req.user?.documento, req.body.documento, req.params.documento);
-  const { id_pedido } = req.params; // Obtener el id del pedido de los parámetros
-  const documento = req.user?.documento || req.body.documento || req.params.documento;
+  // Controlador para crear un nuevo pedido
+  static async crearPedido(req, res) {
+    const pedidoData = req.body;
 
-  if (!documento) {
-      return res.status(400).json({ message: 'Documento no proporcionado.' });
-  }
-
-  try {
-      // Obtener el usuario asociado al pedido
-      const usuario = await Usuario.getUsuarioById(documento);
-      
-      // Verifica que el usuario exista
-      if (!usuario) {
-          return res.status(404).json({ message: 'Usuario no encontrado.' });
-      }
-
-      // Cancelar el pedido en la base de datos
-      await Pedido.cancelarPedido(id_pedido);
-
-      // Notificar al administrador con la información completa del usuario
-      await enviarNotificacionAdministrador(`El pedido registrado número ${id_pedido} ha sido cancelado por el usuario ${usuario.nombre_usuario} ${usuario.apellido_usuario}, con número de identificación ${usuario.documento}.`);
-
-      return res.status(200).json({ message: 'Pedido cancelado con éxito y notificación enviada.' });
-  } catch (error) {
-      console.error('Error en cancelarPedido (controlador):', error);
-      return res.status(500).json({ message: 'Error al cancelar el pedido.' });
-  }
-}
-
-  static async realizarPedido(req, res) {
-    const { documento, metodo_pago, subtotal_pago, total_pago, items, direccion_envio } = req.body;
+    // Asegúrate de que las fechas estén en la zona horaria de Bogotá
+    const fechaPedido = moment.tz(pedidoData.fecha_pedido, "America/Bogota").format("YYYY-MM-DD");
+    const fechaEntrega = moment.tz(pedidoData.fecha_entrega, "America/Bogota").format("YYYY-MM-DD");
 
     try {
-      // Validación de datos
+      // Llamar al modelo para crear el pedido
+      const result = await Pedido.crearPedido({
+        ...pedidoData,
+        fecha_pedido: fechaPedido,
+        fecha_entrega: fechaEntrega,
+      });
+      res.status(201).json(result);
+    } catch (error) {
+      console.error('Error al crear pedido:', error);
+      res.status(500).json({ message: 'Error al crear pedido', error });
+    }
+  }
+
+  // Realizar un pedido
+  static async realizarPedido(req, res) {
+    const { documento, metodo_pago, subtotal_pago, total_pago, items, direccion_envio, fecha_entrega } = req.body;
+
+    try {
+      // Validación de parámetros requeridos
       if (
         documento === undefined ||
         metodo_pago === undefined ||
@@ -117,36 +137,34 @@ static async cancelarPedido(req, res) {
         !direccion_envio
       ) {
         return res.status(400).json({
-          mensaje: 'Faltan datos requeridos para realizar el pedido.',
+          mensaje: 'Faltan datos requeridos para realizar el pedido.'
         });
       }
 
-      // Verificar que todos los items tengan la estructura correcta
-      for (const item of items) {
-        if (!item.id_producto || !item.cantidad || !item.precio_unitario) {
-          return res.status(400).json({
-            mensaje: 'Cada item debe contener id_producto, cantidad y precio_unitario.',
-          });
-        }
-        if (typeof item.cantidad !== 'number' || item.cantidad <= 0) {
-          return res.status(400).json({
-            mensaje: 'La cantidad debe ser un número positivo.',
-          });
-        }
-        if (typeof item.precio_unitario !== 'number' || item.precio_unitario < 0) {
-          return res.status(400).json({
-            mensaje: 'El precio unitario debe ser un número no negativo.',
-          });
-        }
-        if (item.opcion_adicional && typeof item.opcion_adicional !== 'string') {
-          return res.status(400).json({
-            mensaje: 'La opción adicional debe ser una cadena si se proporciona.',
-          });
-        }
-      }
+      // Convertir la fecha de entrega a la zona horaria de Bogotá (si se proporciona)
+      const fechaEntregaBogota = fecha_entrega ? moment(fecha_entrega).tz("America/Bogota").startOf('day').format("YYYY-MM-DD") : null;
 
-      // Llamada al modelo para realizar el pedido
-      const resultado = await Pedido.realizarPedido(documento, metodo_pago, subtotal_pago, total_pago, items, direccion_envio);
+      // Convertir la fecha de pedido a la zona horaria de Bogotá (usamos el momento actual)
+      const fechaPedido = moment().tz("America/Bogota").format("YYYY-MM-DD HH:mm:ss");
+
+      // Llamar al modelo para realizar el pedido
+      const resultado = await Pedido.realizarPedido(
+        documento,
+        metodo_pago,
+        subtotal_pago,
+        total_pago,
+        items,
+        direccion_envio,
+        fechaEntregaBogota,
+        fechaPedido
+      );
+
+      // Reducir el stock de los productos involucrados en el pedido
+      for (const item of items) {
+        const producto = await Producto.obtenerProductoPorId(item.id_producto);
+        const nuevaCantidad = producto.cantidad_disponible - item.cantidad;
+        await Producto.actualizarCantidadDisponible(item.id_producto, nuevaCantidad);
+      }
 
       return res.status(201).json({
         mensaje: 'Pedido realizado con éxito',
@@ -191,7 +209,7 @@ static async cancelarPedido(req, res) {
 
       pedidoItemData.id_pedido = id_pedido; // Asignar ID del pedido a los datos del ítem
       const result = await Pedido.crearPedidoItem(pedidoItemData);
-      
+
       return res.status(201).json({
         mensaje: 'Ítem de pedido creado con éxito',
         result,

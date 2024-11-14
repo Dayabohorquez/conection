@@ -134,7 +134,7 @@ class ProductoController {
   // Actualizar un producto
   static async actualizarProducto(req, res) {
     const { idProducto } = req.params;
-
+  
     const {
       codigo_producto,
       nombre_producto,
@@ -144,16 +144,16 @@ class ProductoController {
       id_evento,
       id_fecha_especial,
     } = req.body;
-
+  
     let foto_ProductoURL = null;
     let foto_ProductoPath = null;
-
+  
     if (req.files && req.files.foto_Producto) {
       const uploadedFile = req.files.foto_Producto;
       const timestamp = Date.now();
       const uniqueFileName = `${timestamp}_${uploadedFile.name}`;
       const uploadPath = path.join(__dirname, '../uploads/img/producto/', uniqueFileName);
-
+  
       await uploadedFile.mv(uploadPath);
       foto_ProductoURL = `http://localhost:4000/uploads/img/producto/${uniqueFileName}`;
       foto_ProductoPath = `./uploads/img/producto/${uniqueFileName}`;
@@ -163,7 +163,7 @@ class ProductoController {
       foto_ProductoPath = existingProduct.foto_Producto; // Mantener la foto actual
       foto_ProductoURL = existingProduct.foto_ProductoURL; // Mantener la URL actual
     }
-
+  
     const updatedData = {
       id_producto: idProducto,
       codigo_producto,
@@ -176,7 +176,7 @@ class ProductoController {
       id_evento,
       id_fecha_especial
     };
-
+  
     try {
       await Producto.actualizarProducto(updatedData);
       res.json({ message: 'Producto actualizado correctamente' });
@@ -184,7 +184,7 @@ class ProductoController {
       console.error('Error al actualizar producto:', error);
       res.status(500).json({ message: 'Error al actualizar producto', error });
     }
-  }
+  }  
 
   static async actualizarCantidad(req, res) {
     const { idProducto } = req.params;

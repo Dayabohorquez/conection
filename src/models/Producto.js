@@ -112,7 +112,6 @@ class Producto extends Model {
     }
   }
 
-  // Actualizar producto
   static async actualizarProducto({
     id_producto,
     codigo_producto,
@@ -126,6 +125,11 @@ class Producto extends Model {
     id_fecha_especial
   }) {
     try {
+      if (!id_producto || !codigo_producto || !nombre_producto || !descripcion_producto || !precio_producto) {
+        throw new Error('Faltan parámetros requeridos');
+      }
+  
+      // Ejecutar la consulta con parámetros
       await sequelize.query(`
         CALL ActualizarProducto(
           :id_producto,
@@ -153,13 +157,13 @@ class Producto extends Model {
         },
         type: QueryTypes.RAW
       });
-
+  
       return { message: 'Producto actualizado exitosamente' };
     } catch (error) {
       console.error(`Error al actualizar el producto: ${error}`);
       throw error;
     }
-  }
+  }  
 
   static async actualizarCantidadDisponible(id_producto, nueva_cantidad) {
     try {

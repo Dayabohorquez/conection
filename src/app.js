@@ -24,6 +24,7 @@ import usuarioRoutes from './routes/usuario.routes.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+process.env.TZ = 'America/Bogota';
 // Inicializa la aplicación Express
 const app = express();
 
@@ -40,14 +41,14 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Endpoint para listar imágenes
 app.get('/api/images/producto', (req, res) => {
-    const dirPath = path.join(__dirname, 'uploads/img/producto');
-    fs.readdir(dirPath, (err, files) => {
-        if (err) {
-            return res.status(500).send('Error al leer el directorio.');
-        }
-        const images = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
-        res.json(images);
-    });
+  const dirPath = path.join(__dirname, 'uploads/img/producto');
+  fs.readdir(dirPath, (err, files) => {
+    if (err) {
+      return res.status(500).send('Error al leer el directorio.');
+    }
+    const images = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
+    res.json(images);
+  });
 });
 
 app.use('/uploads/img/pedido', serveIndex(path.join(__dirname, 'uploads/img/pedido'), { icons: true }));
