@@ -1,7 +1,6 @@
 import Producto from "../models/Producto.js";
 import path from 'path';
 import { fileURLToPath } from 'url';
-import handleImageUpload from '../utils/imageUpload.js'; // Importa la función
 
 // Obtener el nombre del archivo actual y el directorio
 const __filename = fileURLToPath(import.meta.url);
@@ -72,141 +71,143 @@ class ProductoController {
   }
 
   // Crear un nuevo producto
-static async crearProducto(req, res) {
-  try {
-    // Validar que se subió un archivo de imagen
-    if (!req.files || !req.files.foto_Producto) {
-      return res.status(400).json({ message: 'No se subió ninguna imagen' });
-    }
+    static async crearProducto(req, res) {
+      // Validar que se subió un archivo
+      if (!req.files || !req.files.foto_Producto) {
+        return res.status(400).json({ message: 'No se subió ninguna imagen' });
+      }
 
-    const uploadedFile = req.files.foto_Producto;
-
-    // Usa la función de manejo de imágenes
-    const { fileURL, filePath } = await handleImageUpload(uploadedFile, '/uploads/img/producto');
-
-    // Validar los datos del producto
-    const {
-      codigo_producto,
-      nombre_producto,
-      descripcion_producto,
-      precio_producto,
-      cantidad_disponible,
-      id_tipo_flor,
-      id_evento,
-      id_fecha_especial
-    } = req.body;
-
-    if (!codigo_producto || !nombre_producto || !descripcion_producto || !precio_producto ||
-      !cantidad_disponible || !id_tipo_flor || !id_evento || !id_fecha_especial) {
-      return res.status(400).json({ message: 'Faltan datos requeridos' });
-    }
-
-    const productoData = {
-      codigo_producto: parseInt(codigo_producto),
-      nombre_producto,
-      foto_Producto: filePath, // Ruta del archivo
-      foto_ProductoURL: fileURL, // URL pública del archivo
-      descripcion_producto,
-      precio_producto: parseFloat(precio_producto),
-      cantidad_disponible: parseInt(cantidad_disponible),
-      id_tipo_flor: parseInt(id_tipo_flor),
-      id_evento: parseInt(id_evento),
-      id_fecha_especial: parseInt(id_fecha_especial)
-    };
-
-    // Depurar los datos del producto antes de la creación
-    console.log('Datos del producto:', productoData);
-
-    // Llama a la función para crear el producto en la base de datos
-    await Producto.crearProducto(productoData);
-    res.status(201).json({ message: 'Producto creado correctamente' });
-
-  } catch (error) {
-    console.error('Error al crear producto:', error);
-    res.status(500).json({ message: 'Error al crear producto', error: error.message });
-  }
-}
-
-// Actualizar un producto
-static async actualizarProducto(req, res) {
-  const { idProducto } = req.params;
-
-  // Datos del producto a actualizar
-  const {
-    codigo_producto,
-    nombre_producto,
-    descripcion_producto,
-    precio_producto,
-    id_tipo_flor,
-    id_evento,
-    id_fecha_especial
-  } = req.body;
-
-  let foto_ProductoURL = null;
-  let foto_ProductoPath = null;
-
-  try {
-    // Si se sube una nueva imagen
-    if (req.files && req.files.foto_Producto) {
       const uploadedFile = req.files.foto_Producto;
+      const timestamp = Date.now();
+      const uniqueFileName = `${uploadedFile.name.split('.')[0]}_${timestamp}.${uploadedFile.name.split('.').pop()}`;
+      const uploadPath = path.join(__dirname, '../uploads/img/producto/', uniqueFileName);
+      const foto_ProductoURL = `https://conection-1.onrender.com/uploads/img/producto/${uniqueFileName}`;
 
-      // Usa la función de manejo de imágenes
-      const { fileURL, filePath } = await handleImageUpload(uploadedFile, '/uploads/img/producto');
-      foto_ProductoURL = fileURL;
-      foto_ProductoPath = filePath;
-    } else {
-      // Si no se sube una nueva foto, mantén la foto actual
-      const existingProduct = await Producto.obtenerProductoPorId(idProducto);
-      foto_ProductoURL = existingProduct.foto_ProductoURL;
-      foto_ProductoPath = existingProduct.foto_Producto;
+      // Mover el archivo subido
+      uploadedFile.mv(uploadPath, async (err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Error al subir la imagen', error: err });
+        }
+
+        try {
+          const {
+            codigo_producto,
+            nombre_producto,
+            descripcion_producto,
+            precio_producto,
+            cantidad_disponible,
+            id_tipo_flor,
+            id_evento,
+            id_fecha_especial
+          } = req.body;
+
+          if (!codigo_producto || !nombre_producto || !descripcion_producto || !precio_producto ||
+            !cantidad_disponible || !id_tipo_flor || !id_evento || !id_fecha_especial) {
+            return res.status(400).json({ message: 'Faltan datos requeridos' });
+          }
+
+          const productoData = {
+            codigo_producto: parseInt(codigo_producto),
+            nombre_producto,
+            foto_Producto: `./uploads/img/producto/${uniqueFileName}`,
+            foto_ProductoURL,
+            descripcion_producto,
+            precio_producto: parseFloat(precio_producto),
+            cantidad_disponible: parseInt(cantidad_disponible),
+            id_tipo_flor: parseInt(id_tipo_flor),
+            id_evento: parseInt(id_evento),
+            id_fecha_especial: parseInt(id_fecha_especial)
+          };
+
+          // Depurar los datos del producto antes de la creación
+          console.log('Datos del producto:', productoData);
+
+          await Producto.crearProducto(productoData);
+          res.status(201).json({ message: 'Producto creado correctamente' });
+        } catch (error) {
+          console.error('Error al crear producto:', error);
+          res.status(500).json({ message: 'Error al crear producto', error });
+        }
+      });
     }
 
-    // Datos finales para actualizar el producto
-    const updatedData = {
-      id_producto: idProducto,
-      codigo_producto,
-      nombre_producto,
-      foto_Producto: foto_ProductoPath,
-      foto_ProductoURL,
-      descripcion_producto,
-      precio_producto,
-      id_tipo_flor,
-      id_evento,
-      id_fecha_especial
-    };
-
-    // Llama a la función para actualizar el producto en la base de datos
-    await Producto.actualizarProducto(updatedData);
-    res.json({ message: 'Producto actualizado correctamente' });
-
-  } catch (error) {
-    console.error('Error al actualizar producto:', error);
-    res.status(500).json({ message: 'Error al actualizar producto', error: error.message });
-  }
-}
+    // Actualizar un producto
+    static async actualizarProducto(req, res) {
+      const { idProducto } = req.params;
+    
+      const {
+        codigo_producto,
+        nombre_producto,
+        descripcion_producto,
+        precio_producto,
+        id_tipo_flor,
+        id_evento,
+        id_fecha_especial,
+      } = req.body;
+    
+      let foto_ProductoURL = null;
+      let foto_ProductoPath = null;
+    
+      if (req.files && req.files.foto_Producto) {
+        const uploadedFile = req.files.foto_Producto;
+        const timestamp = Date.now();
+        const uniqueFileName = `${timestamp}_${uploadedFile.name}`;
+        const uploadPath = path.join(__dirname, '../uploads/img/producto/', uniqueFileName);
+    
+        await uploadedFile.mv(uploadPath);
+        foto_ProductoURL = `https://conection-1.onrender.com/uploads/img/producto/${uniqueFileName}`;
+        foto_ProductoPath = `./uploads/img/producto/${uniqueFileName}`;
+      } else {
+        // Si no hay nueva foto, mantener la foto actual
+        const existingProduct = await Producto.obtenerProductoPorId(idProducto);
+        foto_ProductoPath = existingProduct.foto_Producto; // Mantener la foto actual
+        foto_ProductoURL = existingProduct.foto_ProductoURL; // Mantener la URL actual
+      }
+    
+      const updatedData = {
+        id_producto: idProducto,
+        codigo_producto,
+        nombre_producto,
+        foto_Producto: foto_ProductoPath,
+        foto_ProductoURL,
+        descripcion_producto,
+        precio_producto,
+        id_tipo_flor,
+        id_evento,
+        id_fecha_especial
+      };
+    
+      try {
+        await Producto.actualizarProducto(updatedData);
+        res.json({ message: 'Producto actualizado correctamente' });
+      } catch (error) {
+        console.error('Error al actualizar producto:', error);
+        res.status(500).json({ message: 'Error al actualizar producto', error });
+      }
+    }  
 
   static async actualizarCantidad(req, res) {
     const { idProducto } = req.params;
     const { nuevaCantidad } = req.body;
 
     try {
-      const producto = await Producto.obtenerProductoPorId(idProducto);
-      if (!producto) {
-        return res.status(404).json({ message: 'Producto no encontrado' });
-      }
+        const producto = await Producto.obtenerProductoPorId(idProducto);
+        if (!producto) {
+            return res.status(404).json({ message: 'Producto no encontrado' });
+        }
 
-      // Aquí puedes validar que la nueva cantidad sea válida
-      if (nuevaCantidad < 0) {
-        return res.status(400).json({ message: 'La cantidad no puede ser negativa' });
-      }
+        // Aquí puedes validar que la nueva cantidad sea válida
+        if (nuevaCantidad < 0) {
+            return res.status(400).json({ message: 'La cantidad no puede ser negativa' });
+        }
 
-      await Producto.actualizarCantidadDisponible(idProducto, nuevaCantidad);
-      return res.status(200).json({ message: 'Cantidad disponible actualizada', nuevaCantidad });
+        await Producto.actualizarCantidadDisponible(idProducto, nuevaCantidad);
+        return res.status(200).json({ message: 'Cantidad disponible actualizada', nuevaCantidad });
     } catch (error) {
-      console.error('Error al actualizar cantidad de producto:', error);
-      return res.status(500).json({ message: 'Error al actualizar cantidad de producto', error: error.message });
+        console.error('Error al actualizar cantidad de producto:', error);
+        return res.status(500).json({ message: 'Error al actualizar cantidad de producto', error: error.message });
     }
-  }
+}
 
   // Cambiar estado de un producto (activado/desactivado)
   static async cambiarEstadoProducto(req, res) {
