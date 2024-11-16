@@ -181,22 +181,60 @@ class UsuarioController {
       res.status(500).json({ mensaje: 'Error al obtener la dirección' });
     }
   }
+  static async changePassword(req, res) {
+    const { documento } = req.params;
+    const { oldPassword, newPassword } = req.body;
 
-  // Comparar contraseña
+    // Validar las contraseñas
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ message: 'Por favor, proporciona ambas contraseñas.' });
+    }
+
+    try {
+      // Obtener el usuario de la base de datos
+      const usuario = await Usuario.findByPk(documento); // Asegúrate de usar el método correcto para obtener el usuario
+      if (!usuario) {
+        return res.status(404).json({ message: 'Usuario no encontrado.' });
+      }
+
+      // Verificar si la contraseña antigua es válida
+      const esValido = await bcrypt.compare(oldPassword, usuario.contrasena_usuario);
+      if (!esValido) {
+        return res.status(400).json({ message: 'Contraseña antigua incorrecta.' });
+      }
+
+      // Actualizar la contraseña con la nueva
+      const updateResult = await Usuario.updatePassword(documento, newPassword);
+      if (!updateResult.success) {
+        return res.status(500).json({ message: 'No se pudo actualizar la contraseña.' });
+      }
+
+      // Respuesta exitosa
+      res.json({ message: 'Contraseña cambiada exitosamente.' });
+    } catch (error) {
+      console.error('Error al cambiar la contraseña:', error);
+      return res.status(500).json({ message: 'Error al cambiar la contraseña.', error: error.message });
+    }
+  }
+
+  // Comparar la contraseña
   static async compararContrasena(req, res) {
     console.log('Datos recibidos:', req.body);
     const { documento, contrasena_usuario } = req.body;
 
+    // Validar los parámetros de entrada
     if (!documento || !contrasena_usuario) {
       return res.status(400).json({ message: 'El documento y la contraseña son requeridos.' });
     }
 
     try {
-      const usuario = await Usuario.getUsuarioById(documento);
+      // Obtener el usuario de la base de datos
+      const usuario = await Usuario.findByPk(documento); // Usamos findByPk si 'documento' es la clave primaria
       if (!usuario) {
         return res.status(404).json({ message: 'Usuario no encontrado' });
       }
 
+      // Comparar la contraseña proporcionada con la almacenada
       const esValido = await bcrypt.compare(contrasena_usuario, usuario.contrasena_usuario);
       if (esValido) {
         return res.json({ message: 'Contraseña correcta' });
@@ -204,7 +242,8 @@ class UsuarioController {
         return res.status(401).json({ message: 'Contraseña incorrecta' });
       }
     } catch (error) {
-      return res.status(500).json({ message: 'Error al comparar contraseñas', error });
+      console.error('Error al comparar contraseñas:', error);
+      return res.status(500).json({ message: 'Error al comparar contraseñas', error: error.message });
     }
   }
 
