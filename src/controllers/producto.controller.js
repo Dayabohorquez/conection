@@ -81,7 +81,7 @@ class ProductoController {
     const timestamp = Date.now();
     const uniqueFileName = `${uploadedFile.name.split('.')[0]}_${timestamp}.${uploadedFile.name.split('.').pop()}`;
     const uploadPath = path.join(__dirname, '../uploads/img/producto/', uniqueFileName);
-    const foto_ProductoURL = `http://localhost:4000/uploads/img/producto/${uniqueFileName}`;
+    const foto_ProductoURL = `https://conection-1.onrender.com/uploads/img/producto/${uniqueFileName}`;
 
     // Mover el archivo subido
     uploadedFile.mv(uploadPath, async (err) => {
@@ -155,7 +155,7 @@ class ProductoController {
       const uploadPath = path.join(__dirname, '../uploads/img/producto/', uniqueFileName);
   
       await uploadedFile.mv(uploadPath);
-      foto_ProductoURL = `http://localhost:4000/uploads/img/producto/${uniqueFileName}`;
+      foto_ProductoURL = `https://conection-1.onrender.com/uploads/img/producto/${uniqueFileName}`;
       foto_ProductoPath = `./uploads/img/producto/${uniqueFileName}`;
     } else {
       // Si no hay nueva foto, mantener la foto actual
