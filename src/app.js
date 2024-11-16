@@ -5,10 +5,6 @@ import fs from 'fs'; // Asegúrate de importar fs
 import path from 'path';
 import serveIndex from 'serve-index';
 import { fileURLToPath } from 'url';
-import dotenv from 'dotenv';  // Importa dotenv
-
-// Cargar las variables de entorno desde el archivo .env
-dotenv.config();
 
 // Importa las rutas
 import AuthRouter from './routes/AuthRouter.js';
@@ -29,7 +25,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 process.env.TZ = 'America/Bogota';
-
 // Inicializa la aplicación Express
 const app = express();
 
@@ -45,8 +40,6 @@ app.use(fileUpload({
 }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-const baseURL = process.env.BASE_URL || 'http://localhost:4000'; // Si no está configurada, usa localhost para desarrollo
-
 // Endpoint para listar imágenes
 app.get('/api/images/producto', (req, res) => {
   const dirPath = path.join(__dirname, 'uploads/img/producto');
@@ -55,18 +48,16 @@ app.get('/api/images/producto', (req, res) => {
       return res.status(500).send('Error al leer el directorio.');
     }
     const images = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
-    const imageURLs = images.map(image => `${baseURL}/uploads/img/producto/${image}`);
-    res.json(imageURLs); // Devolvemos las URLs completas con el host
+    res.json(images);
   });
 });
 
-// Configuración de la ruta de imágenes
 app.use('/uploads/img/pedido', serveIndex(path.join(__dirname, 'uploads/img/pedido'), { icons: true }));
 app.use('/uploads/img/fecha_especial', serveIndex(path.join(__dirname, 'uploads/img/fecha_especial'), { icons: true }));
 app.use('/uploads/img/tipo_flor', serveIndex(path.join(__dirname, 'uploads/img/tipo_flor'), { icons: true }));
 app.use('/uploads/img/evento', serveIndex(path.join(__dirname, 'uploads/img/evento'), { icons: true }));
 
-// Montar las rutas con las rutas base
+// Monta las rutas con rutas base
 app.use(usuarioRoutes, productoRoutes, opcionadicionalRoutes, pedidoRoutes, pedidoitemRoutes, carritoItemRoutes, pagoRoutes, carritoRoutes, eventoRoutes, tipoFlorRoutes, fechaEspecialRoutes, AuthRouter);
 
 // Middleware para manejo de errores
@@ -74,5 +65,7 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Algo salió mal. Intenta nuevamente más tarde.' });
 });
+
+app.use('/api', AuthRouter);
 
 export default app;
