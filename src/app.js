@@ -1,7 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import fileUpload from 'express-fileupload';
-import fs from 'fs'; // Asegúrate de importar fs
+import fs from 'fs';
 import path from 'path';
 import serveIndex from 'serve-index';
 import { fileURLToPath } from 'url';
@@ -25,6 +25,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 process.env.TZ = 'America/Bogota';
+
 // Inicializa la aplicación Express
 const app = express();
 
@@ -36,11 +37,32 @@ app.use(cors({
 
 app.use(express.json());
 app.use(fileUpload({
-  createParentPath: true,
+  createParentPath: true,  // Esto asegura que la ruta para guardar la imagen sea creada si no existe
 }));
+
+// Ruta para servir las imágenes subidas
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Endpoint para listar imágenes
+// Crear carpetas si no existen
+const createUploadDirs = () => {
+  const imgPaths = [
+    'uploads/img/producto',
+    'uploads/img/pedido',
+    'uploads/img/fecha_especial',
+    'uploads/img/tipo_flor',
+    'uploads/img/evento'
+  ];
+
+  imgPaths.forEach(imgPath => {
+    if (!fs.existsSync(path.join(__dirname, imgPath))) {
+      fs.mkdirSync(path.join(__dirname, imgPath), { recursive: true });
+    }
+  });
+};
+
+createUploadDirs(); // Llamada para crear las carpetas
+
+// Endpoint para listar imágenes de productos
 app.get('/api/images/producto', (req, res) => {
   const dirPath = path.join(__dirname, 'uploads/img/producto');
   fs.readdir(dirPath, (err, files) => {
@@ -48,14 +70,33 @@ app.get('/api/images/producto', (req, res) => {
       return res.status(500).send('Error al leer el directorio.');
     }
     const images = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
-    res.json(images);
+    const imageURLs = images.map(image => `${process.env.BASE_URL}/uploads/img/producto/${image}`);
+    res.json(imageURLs); // Devuelve las URLs completas de las imágenes
   });
 });
 
+// Configura serveIndex para servir los directorios de imágenes
 app.use('/uploads/img/pedido', serveIndex(path.join(__dirname, 'uploads/img/pedido'), { icons: true }));
 app.use('/uploads/img/fecha_especial', serveIndex(path.join(__dirname, 'uploads/img/fecha_especial'), { icons: true }));
 app.use('/uploads/img/tipo_flor', serveIndex(path.join(__dirname, 'uploads/img/tipo_flor'), { icons: true }));
 app.use('/uploads/img/evento', serveIndex(path.join(__dirname, 'uploads/img/evento'), { icons: true }));
+
+// Endpoint para subir imágenes
+app.post('/api/upload', (req, res) => {
+  if (!req.files || !req.files.image) {
+    return res.status(400).send('No se ha cargado ninguna imagen.');
+  }
+
+  const image = req.files.image;
+  const uploadPath = path.join(__dirname, 'uploads/img/producto', image.name); // Cambia esta ruta según la categoría de la imagen
+
+  image.mv(uploadPath, (err) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    res.send({ message: 'Imagen subida exitosamente', imageUrl: `${process.env.BASE_URL}/uploads/img/producto/${image.name}` });
+  });
+});
 
 // Monta las rutas con rutas base
 app.use(usuarioRoutes, productoRoutes, opcionadicionalRoutes, pedidoRoutes, pedidoitemRoutes, carritoItemRoutes, pagoRoutes, carritoRoutes, eventoRoutes, tipoFlorRoutes, fechaEspecialRoutes, AuthRouter);
