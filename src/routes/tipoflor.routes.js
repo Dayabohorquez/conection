@@ -1,20 +1,20 @@
     import { Router } from 'express';
-    import TipoFlorController from '../controllers/tipoFlor.controller.js';
+    import tipoFlorController from './controllers/tipoFlor.controller.js';
 
     // Inicializamos el enrutador
     const router = Router();
 
     // Obtener todos los tipos de flores
-    router.get('/api/tipos-flor', TipoFlorController.getTiposFlor);
+    router.get('/api/tipos-flor', tipoFlorController.getTiposFlor);
 
     // Obtener un tipo de flor por ID
-    router.get('/api/tipo-flor/:id', TipoFlorController.getTipoFlorById);
+    router.get('/api/tipo-flor/:id', tipoFlorController.getTipoFlorById);
 
-    router.put('/api/tipo-flor/:id_tipo_flor', TipoFlorController.putTipoFlor);
+    router.put('/api/tipo-flor/:id_tipo_flor', tipoFlorController.putTipoFlor);
 
-    router.post('/api/tipo-flor', TipoFlorController.postTipoFlor);    
+    router.post('/api/tipo-flor', tipoFlorController.postTipoFlor);    
 
     // Eliminar un tipo de flor
-    router.delete('/api/tipo-flor/:id', TipoFlorController.deleteTipoFlor);
+    router.delete('/api/tipo-flor/:id', tipoFlorController.deleteTipoFlor);
 
     export default router;
