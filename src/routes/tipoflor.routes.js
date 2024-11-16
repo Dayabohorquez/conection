@@ -1,5 +1,5 @@
     import { Router } from 'express';
-    import tipoFlorController from './controllers/tipoFlor.controller.js';
+    import tipoFlorController from '../controllers/tipoflor.controller.js';
 
     // Inicializamos el enrutador
     const router = Router();
