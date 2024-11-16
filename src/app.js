@@ -62,6 +62,17 @@ const createUploadDirs = () => {
 
 createUploadDirs(); // Llamada para crear las carpetas
 
+// Configura serveIndex para servir los directorios de imágenes
+app.use('/uploads/img/pedido', serveIndex(path.join(__dirname, 'uploads/img/pedido'), { icons: true }));
+app.use('/uploads/img/fecha_especial', serveIndex(path.join(__dirname, 'uploads/img/fecha_especial'), { icons: true }));
+app.use('/uploads/img/tipo_flor', serveIndex(path.join(__dirname, 'uploads/img/tipo_flor'), { icons: true }));
+app.use('/uploads/img/evento', serveIndex(path.join(__dirname, 'uploads/img/evento'), { icons: true }));
+
+// Usar variables de entorno para manejar el entorno
+const baseURL = process.env.NODE_ENV === 'production'
+  ? 'https://conection-1.onrender.com'  // En producción, usa el dominio de producción
+  : 'http://localhost:4000';  // En desarrollo, usa localhost
+
 // Endpoint para listar imágenes de productos
 app.get('/api/images/producto', (req, res) => {
   const dirPath = path.join(__dirname, 'uploads/img/producto');
@@ -70,16 +81,10 @@ app.get('/api/images/producto', (req, res) => {
       return res.status(500).send('Error al leer el directorio.');
     }
     const images = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
-    const imageURLs = images.map(image => `${process.env.BASE_URL}/uploads/img/producto/${image}`);
+    const imageURLs = images.map(image => `${baseURL}/uploads/img/producto/${image}`);
     res.json(imageURLs); // Devuelve las URLs completas de las imágenes
   });
 });
-
-// Configura serveIndex para servir los directorios de imágenes
-app.use('/uploads/img/pedido', serveIndex(path.join(__dirname, 'uploads/img/pedido'), { icons: true }));
-app.use('/uploads/img/fecha_especial', serveIndex(path.join(__dirname, 'uploads/img/fecha_especial'), { icons: true }));
-app.use('/uploads/img/tipo_flor', serveIndex(path.join(__dirname, 'uploads/img/tipo_flor'), { icons: true }));
-app.use('/uploads/img/evento', serveIndex(path.join(__dirname, 'uploads/img/evento'), { icons: true }));
 
 // Endpoint para subir imágenes
 app.post('/api/upload', (req, res) => {
@@ -94,7 +99,7 @@ app.post('/api/upload', (req, res) => {
     if (err) {
       return res.status(500).send(err);
     }
-    res.send({ message: 'Imagen subida exitosamente', imageUrl: `${process.env.BASE_URL}/uploads/img/producto/${image.name}` });
+    res.send({ message: 'Imagen subida exitosamente', imageUrl: `${baseURL}/uploads/img/producto/${image.name}` });
   });
 });
 

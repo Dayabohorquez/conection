@@ -1,5 +1,9 @@
-// utils/imageUpload.js
 import path from 'path';
+
+// Cambiar la URL base según el entorno (Desarrollo o Producción)
+const baseURL = process.env.NODE_ENV === 'production'
+  ? 'https://conection-1.onrender.com'  // Producción
+  : 'http://localhost:4000';  // Desarrollo
 
 const handleImageUpload = async (imageFile, dirPath) => {
   if (!imageFile) {
@@ -26,7 +30,7 @@ const handleImageUpload = async (imageFile, dirPath) => {
   await imageFile.mv(uploadPath);
 
   // Retorna la URL y la ruta relativa del archivo
-  const fileURL = `https://conection-1.onrender.com${dirPath}/${uniqueFileName}`;
+  const fileURL = `${baseURL}${dirPath}/${uniqueFileName}`;
   const filePath = `./uploads${dirPath}/${uniqueFileName}`;
 
   return { fileURL, filePath };
