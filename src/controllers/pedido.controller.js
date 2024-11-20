@@ -1,8 +1,8 @@
+import moment from 'moment-timezone'; // Para manejar la zona horaria
 import Pedido from "../models/Pedido.js";
-import { enviarNotificacionAdministrador } from '../services/notificaciones.js';
-import moment from 'moment-timezone';  // Para manejar la zona horaria
 import Producto from "../models/Producto.js";
 import Usuario from "../models/Usuario.js";
+import { enviarNotificacionAdministrador } from '../services/notificaciones.js';
 
 class PedidoController {
   // Obtener todos los pedidos

@@ -38,3 +38,15 @@ export const sendNotification = (pagoData) => {
 
     return transporter.sendMail(mailOptions);
 };
+
+export const senNotification = (productData) => {
+    const { id_producto, nombre_producto } = productData; //
+    const mailOptions = {
+        from: 'dayabohorquez93@gmail.com', // remitente
+        to: 'dayabohorquez93@gmail.com', // correo del administrador
+        subject: 'Notificación de Producto sin Stock',
+        text: `El producto está fuera de stock.\n\nDetalles del producto:\n- ID: ${id_producto}\n- Nombre: ${nombre_producto}`
+    };
+
+    return transporter.sendMail(mailOptions);
+};

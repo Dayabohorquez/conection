@@ -1,8 +1,7 @@
 import { DataTypes, Model, QueryTypes } from 'sequelize';
 import { sequelize } from '../config/db.js';
-import Usuario from './Usuario.js';
 import Producto from './Producto.js';
-import CarritoItem from './Carrito_Item.js';
+import Usuario from './Usuario.js';
 
 class Carrito extends Model {
 
@@ -89,6 +88,25 @@ class Carrito extends Model {
       return { message: 'Producto agregado al carrito exitosamente' };
     } catch (error) {
       console.error(`Error al agregar al carrito: ${error.message}`);
+      throw error;
+    }
+  }
+
+  static async obtenerStockProducto(id_producto) {
+    try {
+      // Consulta el producto y su cantidad disponible utilizando Sequelize
+      const producto = await Producto.findOne({
+        where: { id_producto },
+        attributes: ['cantidad_disponible'], // Selecciona el campo correcto
+      });
+  
+      if (!producto) {
+        throw new Error('Producto no encontrado.');
+      }
+  
+      return producto.cantidad_disponible; // Devuelve la cantidad disponible
+    } catch (error) {
+      console.error(`Error al obtener la cantidad disponible del producto: ${error.message}`);
       throw error;
     }
   }
