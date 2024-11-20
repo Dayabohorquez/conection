@@ -44,19 +44,19 @@ class Usuario extends Model {
   // Método para obtener un usuario por documento
   static async getUsuarioById(documento) {
     try {
-        const result = await sequelize.query(
-            'CALL ObtenerUsuarioPorId(:documento)', 
-            {
-                replacements: { documento }, // Asegúrate de que `documento` esté aquí
-                type: QueryTypes.RAW
-            }
-        );
-        return result.length > 0 ? Usuario.build(result[0]) : null;
+      const result = await sequelize.query(
+        'CALL ObtenerUsuarioPorId(:documento)',
+        {
+          replacements: { documento }, // Asegúrate de que `documento` esté aquí
+          type: QueryTypes.RAW
+        }
+      );
+      return result.length > 0 ? Usuario.build(result[0]) : null;
     } catch (error) {
-        console.error(`Unable to find usuario by documento: ${error}`);
-        throw error;
+      console.error(`Unable to find usuario by documento: ${error}`);
+      throw error;
     }
-}
+  }
 
   // Método para actualizar un usuario
   static async updateUsuario(documento, updated_usuario) {
@@ -145,17 +145,19 @@ class Usuario extends Model {
     }
   }
 
-  // Método para actualizar la contraseña
   static async updatePassword(documento, newPassword) {
     try {
+      // Encriptar la nueva contraseña antes de guardarla
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       console.log('Nuevo hash de contraseña:', hashedPassword); // Para depuración
 
+      // Actualizar la contraseña en la base de datos
       const result = await Usuario.update(
         { contrasena_usuario: hashedPassword },
         { where: { documento } }
       );
 
+      // Verificar si el usuario fue encontrado y actualizado
       if (result[0] === 0) {
         throw new Error('No se encontró el usuario o la contraseña no se actualizó.');
       }
@@ -167,10 +169,12 @@ class Usuario extends Model {
     }
   }
 
-  // Método para comparar contraseñas
+  // Método de instancia para comparar contraseñas
   async comparar(contrasena_usuario) {
     try {
-      return await bcrypt.compare(contrasena_usuario, this.contrasena_usuario);
+      // Comparar la contraseña proporcionada con la almacenada en la base de datos
+      const esValido = await bcrypt.compare(contrasena_usuario, this.contrasena_usuario);
+      return esValido;
     } catch (error) {
       console.error("Error al comparar las contraseñas:", error);
       throw error;
