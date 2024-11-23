@@ -42,20 +42,8 @@ app.use(fileUpload({
 // Ruta para servir archivos estáticos
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Endpoint para listar imágenes
-app.get('/api/images/producto', (req, res) => {
-  const dirPath = path.join(__dirname, 'uploads/img/producto');
-  fs.readdir(dirPath, (err, files) => {
-    if (err) {
-      console.error('Error al leer el directorio:', err);  // Log detallado del error
-      return res.status(500).send('Error al leer el directorio de imágenes.');
-    }
-    const images = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
-    res.json(images);
-  });
-});
-
 // Rutas para servir archivos estáticos con serve-index
+app.use('/uploads/img/producto', serveIndex(path.join(__dirname, 'uploads/img/producto'), { icons: true }));
 app.use('/uploads/img/pedido', serveIndex(path.join(__dirname, 'uploads/img/pedido'), { icons: true }));
 app.use('/uploads/img/fecha_especial', serveIndex(path.join(__dirname, 'uploads/img/fecha_especial'), { icons: true }));
 app.use('/uploads/img/tipo_flor', serveIndex(path.join(__dirname, 'uploads/img/tipo_flor'), { icons: true }));
