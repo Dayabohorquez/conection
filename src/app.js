@@ -1,7 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import fileUpload from 'express-fileupload';
-import fs from 'fs'; // Asegúrate de importar fs
+import fs from 'fs';
 import path from 'path';
 import serveIndex from 'serve-index';
 import { fileURLToPath } from 'url';
@@ -30,8 +30,8 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: 'https://distribuidora-one.vercel.app', // Asegúrate de no tener una barra al final
-  credentials: true,  // Permite el envío de cookies y encabezados de autenticación
+  origin: 'https://distribuidora-one.vercel.app',
+  credentials: true, 
 }));
 
 app.use(express.json());
@@ -39,34 +39,33 @@ app.use(fileUpload({
   createParentPath: true,
 }));
 
-// Directorio para imágenes
-const uploadsDir = path.join(__dirname, 'uploads/img/producto');
+// Crear directorios si no existen
+const dirs = [
+  'uploads/img/producto',
+  'uploads/img/pedido',
+  'uploads/img/fecha_especial',
+  'uploads/img/tipo_flor',
+  'uploads/img/evento'
+];
 
-// Verificar si el directorio existe
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });  // Crea el directorio si no existe
-}
+dirs.forEach((dir) => {
+  const dirPath = path.join(__dirname, dir);
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+});
 
 // Endpoint para listar imágenes de producto
+const uploadsDir = path.join(__dirname, 'uploads/img/producto');
 app.get('/api/images/producto', (req, res) => {
-  const dirPath = uploadsDir;  // Ajustamos el directorio a 'uploads-img-producto'
-  
-  fs.readdir(dirPath, (err, files) => {
+  fs.readdir(uploadsDir, (err, files) => {
     if (err) {
       return res.status(500).send('Error al leer el directorio.');
     }
-    
-    // Filtramos las imágenes por extensión
     const images = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
     res.json(images);
   });
 });
-
-// Rutas para acceder a diferentes tipos de imágenes
-app.use('/uploads/img/pedido', serveIndex(path.join(__dirname, 'uploads/img/pedido'), { icons: true }));
-app.use('/uploads/img/fecha_especial', serveIndex(path.join(__dirname, 'uploads/img/fecha_especial'), { icons: true }));
-app.use('/uploads/img/tipo_flor', serveIndex(path.join(__dirname, 'uploads/img/tipo_flor'), { icons: true }));
-app.use('/uploads/img/evento', serveIndex(path.join(__dirname, 'uploads/img/evento'), { icons: true }));
 
 // Monta las rutas con rutas base
 app.use(usuarioRoutes, productoRoutes, opcionadicionalRoutes, pedidoRoutes, pedidoitemRoutes, carritoItemRoutes, pagoRoutes, carritoRoutes, eventoRoutes, tipoFlorRoutes, fechaEspecialRoutes, AuthRouter);
@@ -76,7 +75,5 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Algo salió mal. Intenta nuevamente más tarde.' });
 });
-
-app.use('/api', AuthRouter);
 
 export default app;

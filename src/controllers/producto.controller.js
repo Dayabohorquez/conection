@@ -1,6 +1,7 @@
 import Producto from "../models/Producto.js";
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 // Obtener el nombre del archivo actual y el directorio
 const __filename = fileURLToPath(import.meta.url);
@@ -71,65 +72,81 @@ class ProductoController {
   }
 
   // Crear un nuevo producto
-    static async crearProducto(req, res) {
-      // Validar que se subió un archivo
-      if (!req.files || !req.files.foto_Producto) {
-        return res.status(400).json({ message: 'No se subió ninguna imagen' });
+  static async crearProducto(req, res) {
+    // Validar que se subió un archivo
+    if (!req.files || !req.files.foto_Producto) {
+      return res.status(400).json({ message: 'No se subió ninguna imagen' });
+    }
+
+    const uploadedFile = req.files.foto_Producto;
+    const timestamp = Date.now();
+    const uniqueFileName = `${uploadedFile.name.split('.')[0]}_${timestamp}.${uploadedFile.name.split('.').pop()}`;
+    const uploadPath = path.join(__dirname, '../uploads/img/producto/', uniqueFileName);
+    const foto_ProductoURL = `https://conection-1.onrender.com/uploads/img/producto/${uniqueFileName}`;
+
+    // Imprimir información del archivo para depurar
+    console.log('Archivo recibido:', uploadedFile.name);
+    console.log('Ruta de subida:', uploadPath);
+
+    // Mover el archivo subido
+    uploadedFile.mv(uploadPath, async (err) => {
+      if (err) {
+        console.error('Error al mover el archivo:', err);
+        return res.status(500).json({ message: 'Error al subir la imagen', error: err });
       }
 
-      const uploadedFile = req.files.foto_Producto;
-      const timestamp = Date.now();
-      const uniqueFileName = `${uploadedFile.name.split('.')[0]}_${timestamp}.${uploadedFile.name.split('.').pop()}`;
-      const uploadPath = path.join(__dirname, '../uploads/img/producto/', uniqueFileName);
-      const foto_ProductoURL = `https://conection-1.onrender.com/uploads/img/producto/${uniqueFileName}`;
+      // Si el archivo se movió correctamente, procedemos con la creación del producto
+      try {
+        // Imprimir el cuerpo de la solicitud para depurar los datos recibidos
+        console.log('Datos recibidos del producto:', req.body);
 
-      // Mover el archivo subido
-      uploadedFile.mv(uploadPath, async (err) => {
-        if (err) {
-          return res.status(500).json({ message: 'Error al subir la imagen', error: err });
+        const {
+          codigo_producto,
+          nombre_producto,
+          descripcion_producto,
+          precio_producto,
+          cantidad_disponible,
+          id_tipo_flor,
+          id_evento,
+          id_fecha_especial
+        } = req.body;
+
+        if (!codigo_producto || !nombre_producto || !descripcion_producto || !precio_producto ||
+          !cantidad_disponible || !id_tipo_flor || !id_evento || !id_fecha_especial) {
+          return res.status(400).json({ message: 'Faltan datos requeridos' });
         }
 
-        try {
-          const {
-            codigo_producto,
-            nombre_producto,
-            descripcion_producto,
-            precio_producto,
-            cantidad_disponible,
-            id_tipo_flor,
-            id_evento,
-            id_fecha_especial
-          } = req.body;
+        // Crear el objeto del producto con los datos
+        const productoData = {
+          codigo_producto: parseInt(codigo_producto),
+          nombre_producto,
+          foto_Producto: `./uploads/img/producto/${uniqueFileName}`,
+          foto_ProductoURL,
+          descripcion_producto,
+          precio_producto: parseFloat(precio_producto),
+          cantidad_disponible: parseInt(cantidad_disponible),
+          id_tipo_flor: parseInt(id_tipo_flor),
+          id_evento: parseInt(id_evento),
+          id_fecha_especial: parseInt(id_fecha_especial)
+        };
 
-          if (!codigo_producto || !nombre_producto || !descripcion_producto || !precio_producto ||
-            !cantidad_disponible || !id_tipo_flor || !id_evento || !id_fecha_especial) {
-            return res.status(400).json({ message: 'Faltan datos requeridos' });
-          }
+        // Depurar los datos del producto antes de la creación
+        console.log('Producto a crear:', productoData);
 
-          const productoData = {
-            codigo_producto: parseInt(codigo_producto),
-            nombre_producto,
-            foto_Producto: `./uploads/img/producto/${uniqueFileName}`,
-            foto_ProductoURL,
-            descripcion_producto,
-            precio_producto: parseFloat(precio_producto),
-            cantidad_disponible: parseInt(cantidad_disponible),
-            id_tipo_flor: parseInt(id_tipo_flor),
-            id_evento: parseInt(id_evento),
-            id_fecha_especial: parseInt(id_fecha_especial)
-          };
-
-          // Depurar los datos del producto antes de la creación
-          console.log('Datos del producto:', productoData);
-
-          await Producto.crearProducto(productoData);
-          res.status(201).json({ message: 'Producto creado correctamente' });
-        } catch (error) {
-          console.error('Error al crear producto:', error);
-          res.status(500).json({ message: 'Error al crear producto', error });
+        // Verificar si Producto.crearProducto está disponible y lo ejecuta correctamente
+        const result = await Producto.crearProducto(productoData);
+        if (!result) {
+          console.error('Error al insertar el producto en la base de datos');
+          return res.status(500).json({ message: 'Error al insertar el producto en la base de datos' });
         }
-      });
-    }
+
+        res.status(201).json({ message: 'Producto creado correctamente' });
+      } catch (error) {
+        console.error('Error al crear producto:', error);
+        res.status(500).json({ message: 'Error al crear producto', error });
+      }
+    });
+  }
 
     // Actualizar un producto
     static async actualizarProducto(req, res) {
