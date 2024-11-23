@@ -30,7 +30,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: 'https://distribuidora-one.vercel.app/', // Asegúrate de no tener una barra al final
+  origin: 'https://distribuidora-one.vercel.app', // Asegúrate de no tener una barra al final
   credentials: true,  // Permite el envío de cookies y encabezados de autenticación
 }));
 
