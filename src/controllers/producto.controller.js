@@ -80,7 +80,7 @@ class ProductoController {
       const uploadedFile = req.files.foto_Producto;
       const timestamp = Date.now();
       const uniqueFileName = `${uploadedFile.name.split('.')[0]}_${timestamp}.${uploadedFile.name.split('.').pop()}`;
-      const uploadPath = path.join(__dirname, '../uploads/img/producto/', uniqueFileName);
+      const uploadPath = path.join(__dirname, '/uploads/img/producto/', uniqueFileName);
       const foto_ProductoURL = `https://conection-1.onrender.com/uploads/img/producto/${uniqueFileName}`;
 
       // Mover el archivo subido
