@@ -38,8 +38,6 @@ app.use(express.json());
 app.use(fileUpload({
   createParentPath: true,
 }));
-
-// Ruta para servir archivos estáticos
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Endpoint para listar imágenes
@@ -47,15 +45,13 @@ app.get('/api/images/producto', (req, res) => {
   const dirPath = path.join(__dirname, 'uploads/img/producto');
   fs.readdir(dirPath, (err, files) => {
     if (err) {
-      console.error('Error al leer el directorio:', err);  // Log detallado del error
-      return res.status(500).send('Error al leer el directorio de imágenes.');
+      return res.status(500).send('Error al leer el directorio.');
     }
     const images = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
     res.json(images);
   });
 });
 
-// Rutas para servir archivos estáticos con serve-index
 app.use('/uploads/img/pedido', serveIndex(path.join(__dirname, 'uploads/img/pedido'), { icons: true }));
 app.use('/uploads/img/fecha_especial', serveIndex(path.join(__dirname, 'uploads/img/fecha_especial'), { icons: true }));
 app.use('/uploads/img/tipo_flor', serveIndex(path.join(__dirname, 'uploads/img/tipo_flor'), { icons: true }));
@@ -66,15 +62,10 @@ app.use(usuarioRoutes, productoRoutes, opcionadicionalRoutes, pedidoRoutes, pedi
 
 // Middleware para manejo de errores
 app.use((err, req, res, next) => {
-  console.error('Error en el servidor:', err.stack);
+  console.error(err.stack);
   res.status(500).json({ message: 'Algo salió mal. Intenta nuevamente más tarde.' });
 });
 
 app.use('/api', AuthRouter);
-
-// Manejo de errores 404 (si no se encuentra ninguna ruta)
-app.use((req, res) => {
-  res.status(404).json({ message: 'Ruta no encontrada' });
-});
 
 export default app;
