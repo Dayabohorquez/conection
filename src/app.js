@@ -38,11 +38,8 @@ app.use(express.json());
 app.use(fileUpload({
   createParentPath: true,
 }));
-
-// Ruta para servir archivos estáticos
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Rutas para servir archivos estáticos con serve-index
 app.use('/uploads/img/producto', serveIndex(path.join(__dirname, 'uploads/img/producto'), { icons: true }));
 app.use('/uploads/img/pedido', serveIndex(path.join(__dirname, 'uploads/img/pedido'), { icons: true }));
 app.use('/uploads/img/fecha_especial', serveIndex(path.join(__dirname, 'uploads/img/fecha_especial'), { icons: true }));
@@ -54,15 +51,10 @@ app.use(usuarioRoutes, productoRoutes, opcionadicionalRoutes, pedidoRoutes, pedi
 
 // Middleware para manejo de errores
 app.use((err, req, res, next) => {
-  console.error('Error en el servidor:', err.stack);
+  console.error(err.stack);
   res.status(500).json({ message: 'Algo salió mal. Intenta nuevamente más tarde.' });
 });
 
 app.use('/api', AuthRouter);
-
-// Manejo de errores 404 (si no se encuentra ninguna ruta)
-app.use((req, res) => {
-  res.status(404).json({ message: 'Ruta no encontrada' });
-});
 
 export default app;
