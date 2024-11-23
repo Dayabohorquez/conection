@@ -30,7 +30,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: 'https://distribuidora-one.vercel.app', // Asegúrate de no tener una barra al final
+  origin: 'https://distribuidora-rho.vercel.app', // Asegúrate de no tener una barra al final
   credentials: true,  // Permite el envío de cookies y encabezados de autenticación
 }));
 
@@ -40,7 +40,18 @@ app.use(fileUpload({
 }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use('/uploads/img/producto', serveIndex(path.join(__dirname, 'uploads/img/producto'), { icons: true }));
+// Endpoint para listar imágenes
+app.get('/api/images/producto', (req, res) => {
+  const dirPath = path.join(__dirname, 'uploads/img/producto');
+  fs.readdir(dirPath, (err, files) => {
+    if (err) {
+      return res.status(500).send('Error al leer el directorio.');
+    }
+    const images = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
+    res.json(images);
+  });
+});
+
 app.use('/uploads/img/pedido', serveIndex(path.join(__dirname, 'uploads/img/pedido'), { icons: true }));
 app.use('/uploads/img/fecha_especial', serveIndex(path.join(__dirname, 'uploads/img/fecha_especial'), { icons: true }));
 app.use('/uploads/img/tipo_flor', serveIndex(path.join(__dirname, 'uploads/img/tipo_flor'), { icons: true }));
