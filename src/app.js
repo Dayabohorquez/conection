@@ -38,20 +38,31 @@ app.use(express.json());
 app.use(fileUpload({
   createParentPath: true,
 }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Endpoint para listar imágenes
+// Directorio para imágenes
+const uploadsDir = path.join(__dirname, 'uploads/img/producto');
+
+// Verificar si el directorio existe
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });  // Crea el directorio si no existe
+}
+
+// Endpoint para listar imágenes de producto
 app.get('/api/images/producto', (req, res) => {
-  const dirPath = path.join(__dirname, 'uploads/img/producto');
+  const dirPath = uploadsDir;  // Ajustamos el directorio a 'uploads-img-producto'
+  
   fs.readdir(dirPath, (err, files) => {
     if (err) {
       return res.status(500).send('Error al leer el directorio.');
     }
+    
+    // Filtramos las imágenes por extensión
     const images = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
     res.json(images);
   });
 });
 
+// Rutas para acceder a diferentes tipos de imágenes
 app.use('/uploads/img/pedido', serveIndex(path.join(__dirname, 'uploads/img/pedido'), { icons: true }));
 app.use('/uploads/img/fecha_especial', serveIndex(path.join(__dirname, 'uploads/img/fecha_especial'), { icons: true }));
 app.use('/uploads/img/tipo_flor', serveIndex(path.join(__dirname, 'uploads/img/tipo_flor'), { icons: true }));
