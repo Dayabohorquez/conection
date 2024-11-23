@@ -82,7 +82,7 @@ class ProductoController {
     const timestamp = Date.now();
     const uniqueFileName = `${uploadedFile.name.split('.')[0]}_${timestamp}.${uploadedFile.name.split('.').pop()}`;
     const uploadPath = path.join(__dirname, '../uploads/img/producto/', uniqueFileName);
-    const foto_ProductoURL = `https://conection-1.onrender.com/uploads/img/producto/${uniqueFileName}`;
+    const foto_ProductoURL = `https://conection-gap0.onrender.com/uploads/img/producto/${uniqueFileName}`;
 
     // Imprimir información del archivo para depurar
     console.log('Archivo recibido:', uploadedFile.name);
@@ -172,7 +172,7 @@ class ProductoController {
         const uploadPath = path.join(__dirname, '../uploads/img/producto/', uniqueFileName);
     
         await uploadedFile.mv(uploadPath);
-        foto_ProductoURL = `https://conection-1.onrender.com/uploads/img/producto/${uniqueFileName}`;
+        foto_ProductoURL = `https://conection-gap0.onrender.com/uploads/img/producto/${uniqueFileName}`;
         foto_ProductoPath = `./uploads/img/producto/${uniqueFileName}`;
       } else {
         // Si no hay nueva foto, mantener la foto actual
