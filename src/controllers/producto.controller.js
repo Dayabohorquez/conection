@@ -86,8 +86,10 @@ class ProductoController {
       // Mover el archivo subido
       uploadedFile.mv(uploadPath, async (err) => {
         if (err) {
+          console.error('Error al mover el archivo:', err);
           return res.status(500).json({ message: 'Error al subir la imagen', error: err });
         }
+        console.log(`Archivo subido correctamente a: ${uploadPath}`);      
 
         try {
           const {
