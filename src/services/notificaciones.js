@@ -7,8 +7,11 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASS,
     },
     tls: {
-        rejectUnauthorized: false, // Ignora certificados autofirmados
+        rejectUnauthorized: false,
     },
+}, {
+    logger: true,
+    debug: true,
 });
 
 export const enviarNotificacionAdministrador = async (mensaje) => {
@@ -39,14 +42,20 @@ export const sendNotification = (pagoData) => {
     return transporter.sendMail(mailOptions);
 };
 
-export const senNotification = (productData) => {
-    const { id_producto, nombre_producto } = productData; //
-    const mailOptions = {
-        from: 'dayabohorquez93@gmail.com', // remitente
-        to: 'dayabohorquez93@gmail.com', // correo del administrador
-        subject: 'Notificación de Producto sin Stock',
-        text: `El producto está fuera de stock.\n\nDetalles del producto:\n- ID: ${id_producto}\n- Nombre: ${nombre_producto}`
-    };
+export const enviarCorreoStockAgotado = async (producto) => {
+    try {
 
-    return transporter.sendMail(mailOptions);
+        const info = await transporter.sendMail({
+            from: 'dayabohorquez93@gmail.com',
+            to: 'dayabohorquez93@gmail.com',
+            subject: '¡Stock Agotado! Producto sin stock',
+            text: `El producto ${producto.nombre_producto} (ID: ${producto.id_producto}) se ha agotado en el inventario.`,
+        });
+
+        console.log('Correo enviado: ', info.messageId);
+    } catch (error) {
+        console.error('Error al enviar correo:', error);
+    }
+
+    return transporter.sendMail(info);
 };

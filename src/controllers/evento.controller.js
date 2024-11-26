@@ -1,6 +1,6 @@
-import Evento from "../models/Evento.js";
 import path from 'path';
 import { fileURLToPath } from 'url';
+import Evento from "../models/Evento.js";
 
 // Obtener el nombre del archivo actual y el directorio
 const __filename = fileURLToPath(import.meta.url);
@@ -92,7 +92,7 @@ class EventoController {
       const uploadPath = path.join(__dirname, '../uploads/img/evento/', uniqueFileName);
 
       await uploadedFile.mv(uploadPath);
-      foto_eventoURL = `https://conection-1.onrender.com/uploads/img/evento/${uniqueFileName}`;
+      foto_eventoURL = `http://localhost:4000/uploads/img/evento/${uniqueFileName}`;
       foto_evento = `./uploads/img/evento/${uniqueFileName}`;
     } else {
       const existingEvento = await Evento.getEventoById(id_evento);

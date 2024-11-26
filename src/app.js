@@ -30,8 +30,8 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: 'https://distribuidora-rho.vercel.app', // Asegúrate de no tener una barra al final
-  credentials: true,  // Permite el envío de cookies y encabezados de autenticación
+  origin: 'http://localhost:3000', // Cambia esto al origen de tu frontend
+  credentials: true // Permite el envío de cookies y encabezados de autenticación
 }));
 
 app.use(express.json());

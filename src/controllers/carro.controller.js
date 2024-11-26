@@ -1,5 +1,4 @@
 import Carrito from "../models/Carrito.js";
-import { senNotification } from '../services/notificaciones.js';
 
 class CarritoController {
 
@@ -50,44 +49,20 @@ class CarritoController {
     }
   }
 
-  // Agregar un producto al carrito
+   // Agregar un producto al carrito
   static async agregarAlCarrito(req, res) {
     const { documento, id_producto, cantidad } = req.body;
-
     if (!documento || !id_producto || !cantidad) {
       return res.status(400).json({ message: 'Faltan parámetros necesarios (documento, id_producto, cantidad)' });
     }
-
     try {
       // Verificamos si el stock es suficiente antes de agregar
       await Carrito.verificarStock(id_producto, cantidad);
-
       // Procedemos a agregar el producto al carrito
       const response = await Carrito.agregarAlCarrito(documento, id_producto, cantidad);
-
-      // Verificamos el stock restante después de la operación
-      try {
-        const stockRestante = await Carrito.obtenerStockProducto(id_producto);
-        console.log(`Stock restante: ${stockRestante}`);
-        if (stockRestante === 0) {
-          const mensaje = `El producto con ID ${id_producto} ha llegado a un stock de 0. Verificar inventario.`;
-          try {
-            await senNotification(mensaje);
-            console.log('Correo enviado de notificación de stock agotado');
-          } catch (error) {
-            console.error('Error al enviar correo de notificación:', error);
-          }
-        } else {
-          console.log(`Stock no está en 0: ${stockRestante}`);
-        }
-      } catch (error) {
-        console.error('Error al verificar stock restante:', error);
-      }
-      
       res.status(200).json(response);
     } catch (error) {
       console.error('Error al agregar al carrito:', error);
-
       // Manejo de errores específicos
       if (error.message.includes('producto agotado')) {
         return res.status(400).json({ message: 'El producto está agotado y no se puede agregar al carrito.' });
@@ -98,7 +73,6 @@ class CarritoController {
       if (error.message.includes('producto inactivo')) {
         return res.status(400).json({ message: 'El producto está inactivo y no se puede agregar al carrito.' });
       }
-
       // Respuesta genérica si no se puede identificar el error
       res.status(500).json({ message: 'Error al agregar al carrito', error: error.message });
     }

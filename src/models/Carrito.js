@@ -2,6 +2,7 @@ import { DataTypes, Model, QueryTypes } from 'sequelize';
 import { sequelize } from '../config/db.js';
 import Producto from './Producto.js';
 import Usuario from './Usuario.js';
+import { enviarCorreoStockAgotado } from '../services/notificaciones.js';
 
 class Carrito extends Model {
 
@@ -26,6 +27,12 @@ class Carrito extends Model {
         'CALL ObtenerCarritoCompletoPorUsuarioId(:documento)',
         { replacements: { documento }, type: QueryTypes.RAW }
       );
+
+      if (!result || !Array.isArray(result)) {
+        console.error('Resultado inesperado al obtener el carrito completo:', result);
+        return [];
+      }
+
       return result;
     } catch (error) {
       console.error(`Error al obtener el carrito completo: ${error}`);
@@ -37,9 +44,7 @@ class Carrito extends Model {
   static async verificarStock(id_producto, cantidad) {
     try {
       // Obtener el stock disponible del producto
-      const producto = await Producto.findOne({
-        where: { id_producto }
-      });
+      const producto = await Producto.findOne({ where: { id_producto }});
 
       if (!producto) {
         throw new Error('Producto no encontrado.');
@@ -49,6 +54,11 @@ class Carrito extends Model {
         throw new Error('La cantidad solicitada excede el stock disponible.');
       }
 
+      if (producto.cantidad_disponible - cantidad === 0) {
+        console.log(`El stock del producto "${producto.nombre_producto}" (ID: ${producto.id_producto}) se ha agotado.`);
+        await enviarCorreoStockAgotado(producto);
+      }
+  
       return true;
     } catch (error) {
       console.error('Error al verificar stock:', error);
@@ -88,25 +98,6 @@ class Carrito extends Model {
       return { message: 'Producto agregado al carrito exitosamente' };
     } catch (error) {
       console.error(`Error al agregar al carrito: ${error.message}`);
-      throw error;
-    }
-  }
-
-  static async obtenerStockProducto(id_producto) {
-    try {
-      // Consulta el producto y su cantidad disponible utilizando Sequelize
-      const producto = await Producto.findOne({
-        where: { id_producto },
-        attributes: ['cantidad_disponible'], // Selecciona el campo correcto
-      });
-  
-      if (!producto) {
-        throw new Error('Producto no encontrado.');
-      }
-  
-      return producto.cantidad_disponible; // Devuelve la cantidad disponible
-    } catch (error) {
-      console.error(`Error al obtener la cantidad disponible del producto: ${error.message}`);
       throw error;
     }
   }
