@@ -43,7 +43,7 @@ class EventoController {
     const timestamp = Date.now();
     const uniqueFileName = `${uploadedFile.name.split('.')[0]}_${timestamp}.${uploadedFile.name.split('.').pop()}`;
     const uploadPath = path.join(__dirname, '../uploads/img/evento/', uniqueFileName);
-    const foto_eventoURL = `https://conection-1.onrender.com/uploads/img/evento/${uniqueFileName}`;
+    const foto_eventoURL = `https://conection-gap0.onrender.com/uploads/img/evento/${uniqueFileName}`;
 
     // Mover el archivo subido
     uploadedFile.mv(uploadPath, async (err) => {
@@ -92,7 +92,11 @@ class EventoController {
       const uploadPath = path.join(__dirname, '../uploads/img/evento/', uniqueFileName);
 
       await uploadedFile.mv(uploadPath);
+<<<<<<< HEAD
       foto_eventoURL = `http://localhost:4000/uploads/img/evento/${uniqueFileName}`;
+=======
+      foto_eventoURL = `https://conection-gap0.onrender.com/uploads/img/evento/${uniqueFileName}`;
+>>>>>>> 6358a67a974df0e3611f7d0dcde6c5738374d095
       foto_evento = `./uploads/img/evento/${uniqueFileName}`;
     } else {
       const existingEvento = await Evento.getEventoById(id_evento);
