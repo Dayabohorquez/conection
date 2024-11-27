@@ -2,6 +2,7 @@ import { DataTypes, Model, QueryTypes } from 'sequelize';
 import { sequelize } from '../config/db.js';
 import TipoFlor from '../models/TipoFlor.js';
 import Evento from '../models/Evento.js';
+import { enviarCorreoStockAgotado } from '../services/notificaciones.js';
 
 class Producto extends Model {
   // Obtener todos los productos
@@ -15,6 +16,22 @@ class Producto extends Model {
     }
   }
 
+  static async obtenerProductosAgotadosYNotificar() {
+    try {
+      // Ejecutar la consulta
+      const productosAgotados = await sequelize.query('CALL ObtenerProductosAgotados()', {
+        type: QueryTypes.RAW,  // Asegúrate de que el tipo sea RAW para obtener los resultados directamente
+      });
+  
+      console.log('Resultado de la consulta:', productosAgotados);  // Esto ayudará a verificar los datos
+  
+      return productosAgotados;
+    } catch (error) {
+      console.error('Error al obtener productos agotados:', error);
+      throw error; // Propagamos el error
+    }
+  }  
+
   // Obtener producto por ID
   static async obtenerProductoPorId(id_producto) {
     try {
@@ -25,6 +42,24 @@ class Producto extends Model {
       return producto[0]; // Devuelve el primer resultado
     } catch (error) {
       console.error(`No se pudo encontrar el producto: ${error}`);
+      throw error;
+    }
+  }
+
+  static async actualizarFechaUltimaNotificacion(id_producto) {
+    try {
+      // Actualizar la columna 'fecha_ultima_notificacion' para el producto
+      const query = `UPDATE Producto SET fecha_ultima_notificacion = NOW() WHERE id_producto = ?`;
+      const [result] = await sequelize.query(query, { replacements: [id_producto] });
+
+      if (result.affectedRows === 0) {
+        throw new Error('No se pudo actualizar la fecha de la última notificación');
+      }
+
+      console.log(`Fecha de última notificación actualizada para el producto ${id_producto}`);
+      return true;
+    } catch (error) {
+      console.error('Error al actualizar la fecha de la última notificación:', error);
       throw error;
     }
   }
@@ -78,18 +113,18 @@ class Producto extends Model {
   }) {
     try {
       await sequelize.query(`
-        CALL CrearProducto(
-          :codigo_producto,
-          :nombre_producto,
-          :foto_Producto,
-          :foto_ProductoURL,
-          :descripcion_producto,
-          :precio_producto,
-          :cantidad_disponible,
-          :id_tipo_flor,
-          :id_evento,
-          :id_fecha_especial
-        );`, {
+          CALL CrearProducto(
+            :codigo_producto,
+            :nombre_producto,
+            :foto_Producto,
+            :foto_ProductoURL,
+            :descripcion_producto,
+            :precio_producto,
+            :cantidad_disponible,
+            :id_tipo_flor,
+            :id_evento,
+            :id_fecha_especial
+          );`, {
         replacements: {
           codigo_producto,
           nombre_producto,
@@ -128,21 +163,21 @@ class Producto extends Model {
       if (!id_producto || !codigo_producto || !nombre_producto || !descripcion_producto || !precio_producto) {
         throw new Error('Faltan parámetros requeridos');
       }
-  
+
       // Ejecutar la consulta con parámetros
       await sequelize.query(`
-        CALL ActualizarProducto(
-          :id_producto,
-          :codigo_producto,
-          :nombre_producto,
-          :foto_Producto,
-          :foto_ProductoURL,
-          :descripcion_producto,
-          :precio_producto,
-          :id_tipo_flor,
-          :id_evento,
-          :id_fecha_especial
-        );`, {
+          CALL ActualizarProducto(
+            :id_producto,
+            :codigo_producto,
+            :nombre_producto,
+            :foto_Producto,
+            :foto_ProductoURL,
+            :descripcion_producto,
+            :precio_producto,
+            :id_tipo_flor,
+            :id_evento,
+            :id_fecha_especial
+          );`, {
         replacements: {
           id_producto,
           codigo_producto,
@@ -157,26 +192,26 @@ class Producto extends Model {
         },
         type: QueryTypes.RAW
       });
-  
+
       return { message: 'Producto actualizado exitosamente' };
     } catch (error) {
       console.error(`Error al actualizar el producto: ${error}`);
       throw error;
     }
-  }  
+  }
 
   static async actualizarCantidadDisponible(id_producto, nueva_cantidad) {
     try {
-        await sequelize.query('CALL ActualizarCantidadDisponible(:id_producto, :nueva_cantidad)', {
-            replacements: { id_producto, nueva_cantidad },
-            type: QueryTypes.RAW
-        });
-        return { message: 'Cantidad disponible actualizada' };
+      await sequelize.query('CALL ActualizarCantidadDisponible(:id_producto, :nueva_cantidad)', {
+        replacements: { id_producto, nueva_cantidad },
+        type: QueryTypes.RAW
+      });
+      return { message: 'Cantidad disponible actualizada' };
     } catch (error) {
-        console.error(`No se pudo actualizar la cantidad disponible: ${error}`);
-        throw error;
+      console.error(`No se pudo actualizar la cantidad disponible: ${error}`);
+      throw error;
     }
-}
+  }
 
   // Cambiar estado de un producto (activado/desactivado)
   static async cambiarEstadoProducto(id_producto, nuevo_estado) {
@@ -230,6 +265,10 @@ Producto.init({
   cantidad_disponible: {
     type: DataTypes.INTEGER,
     defaultValue: 0,
+    allowNull: false
+  },
+  fecha_ultima_notificacion: {
+    type: DataTypes.DATE,
     allowNull: false
   },
   id_tipo_flor: {

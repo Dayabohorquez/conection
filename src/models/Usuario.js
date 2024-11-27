@@ -120,10 +120,13 @@ class Usuario extends Model {
   // Método para cambiar el estado de un usuario
   static async toggleUsuarioState(documento) {
     try {
-      await sequelize.query('CALL CambiarEstadoUsuario(:documento)', {
+      // Llamar al procedimiento almacenado para cambiar el estado del usuario
+      const result = await sequelize.query('CALL CambiarEstadoUsuario(:documento)', {
         replacements: { documento },
         type: QueryTypes.RAW
       });
+      
+      // Respuesta si todo salió bien
       return { message: 'Estado de usuario actualizado' };
     } catch (error) {
       console.error(`Unable to toggle usuario state: ${error}`);

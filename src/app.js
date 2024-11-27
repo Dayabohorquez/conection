@@ -28,38 +28,52 @@ process.env.TZ = 'America/Bogota';
 const app = express();
 
 // Middleware
-app.use(cors({}));
 
+app.use(cors({
+  origin: 'http://localhost:3000', // Cambia esto al origen de tu frontend
+  credentials: true // Permite el envío de cookies y encabezados de autenticación
+
+}));
 app.use(express.json());
 app.use(fileUpload({
   createParentPath: true,
 }));
 
-// Crear directorios si no existen
-const dirs = [
-  'uploads/img/producto',
-  'uploads/img/pedido',
-  'uploads/img/fecha_especial',
-  'uploads/img/tipo_flor',
-  'uploads/img/evento'
-];
+// Ruta para servir imágenes estáticas desde 'uploads'
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-dirs.forEach((dir) => {
-  const dirPath = path.join(__dirname, dir);
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
-  }
-});
-
-// Endpoint para listar imágenes de producto
-const uploadsDir = path.join(__dirname, 'uploads/img/producto');
+// Endpoint para listar imágenes de productos
 app.get('/api/images/producto', (req, res) => {
-  fs.readdir(uploadsDir, (err, files) => {
+  const dirPath = path.join(__dirname, 'uploads/img/producto');
+  fs.readdir(dirPath, (err, files) => {
     if (err) {
       return res.status(500).send('Error al leer el directorio.');
     }
     const images = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
     res.json(images);
+  });
+});
+
+// Rutas para servir imágenes en diferentes carpetas
+app.use('/uploads/img/pedido', serveIndex(path.join(__dirname, 'uploads/img/pedido'), { icons: true }));
+app.use('/uploads/img/fecha_especial', serveIndex(path.join(__dirname, 'uploads/img/fecha_especial'), { icons: true }));
+app.use('/uploads/img/tipo_flor', serveIndex(path.join(__dirname, 'uploads/img/tipo_flor'), { icons: true }));
+app.use('/uploads/img/evento', serveIndex(path.join(__dirname, 'uploads/img/evento'), { icons: true }));
+
+// Subida de imágenes para productos
+app.post('/upload/producto', (req, res) => {
+  if (!req.files || Object.keys(req.files).length === 0) {
+    return res.status(400).send('No files were uploaded.');
+  }
+
+  const uploadedFile = req.files.file;
+  const uploadPath = path.join(__dirname, 'uploads', 'img', 'producto', uploadedFile.name);
+
+  uploadedFile.mv(uploadPath, (err) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+    res.send('Producto file uploaded to ' + uploadPath);
   });
 });
 
@@ -73,3 +87,4 @@ app.use((err, req, res, next) => {
 });
 
 export default app;
+

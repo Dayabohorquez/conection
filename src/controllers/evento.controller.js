@@ -43,7 +43,8 @@ class EventoController {
     const timestamp = Date.now();
     const uniqueFileName = `${uploadedFile.name.split('.')[0]}_${timestamp}.${uploadedFile.name.split('.').pop()}`;
     const uploadPath = path.join(__dirname, '../uploads/img/evento/', uniqueFileName);
-    const foto_eventoURL = `https://conection-1.onrender.com/uploads/img/evento/${uniqueFileName}`;
+
+    const foto_eventoURL = `http://localhost:4000/uploads/img/evento/${uniqueFileName}`;
 
     // Mover el archivo subido
     uploadedFile.mv(uploadPath, async (err) => {

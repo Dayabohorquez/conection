@@ -73,6 +73,9 @@ class PedidoController {
         return res.status(404).json({ message: 'Usuario no encontrado.' });
       }
 
+      console.log('Nombre del usuario:', usuario.nombre_usuario); // Debug
+      console.log('Apellido del usuario:', usuario.apellido_usuario);
+
       // Llamar al método del modelo para cancelar el pedido
       await Pedido.cancelarPedido(id_pedido_int); // Pasar el id_pedido como número entero
 
@@ -86,7 +89,7 @@ class PedidoController {
       return res.status(500).json({ message: 'Error al cancelar el pedido.' });
     }
   }
-
+  
   // Controlador para obtener el historial de pedidos de un usuario
   static async obtenerHistorial(req, res) {
     const { documento } = req.params;
