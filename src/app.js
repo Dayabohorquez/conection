@@ -3,6 +3,7 @@ import express from 'express';
 import fileUpload from 'express-fileupload';
 import fs from 'fs';
 import path from 'path';
+import serveIndex from 'serve-index';
 import { fileURLToPath } from 'url';
 
 // Importa las rutas
@@ -28,7 +29,6 @@ process.env.TZ = 'America/Bogota';
 const app = express();
 
 // Middleware
-
 app.use(cors({
   origin: 'http://localhost:3000', // Cambia esto al origen de tu frontend
   credentials: true // Permite el envío de cookies y encabezados de autenticación
@@ -87,4 +87,3 @@ app.use((err, req, res, next) => {
 });
 
 export default app;
-
