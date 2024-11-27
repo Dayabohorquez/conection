@@ -37,7 +37,7 @@ class AuthController {
                 from: process.env.EMAIL_USER,
                 to: usuario.correo_electronico_usuario,
                 subject: 'Restablecer contraseña',
-                text: `Haga clic en el siguiente enlace para restablecer su contraseña: https://conection-gap0.onrender.com/reset-password/${token}`,
+                text: `Haga clic en el siguiente enlace para restablecer su contraseña: http://localhost:3000/reset-password/${token}`,
             };
 
             await transporter.sendMail(mailOptions);
