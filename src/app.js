@@ -3,7 +3,6 @@ import express from 'express';
 import fileUpload from 'express-fileupload';
 import fs from 'fs';
 import path from 'path';
-import serveIndex from 'serve-index';
 import { fileURLToPath } from 'url';
 
 // Importa las rutas
@@ -29,15 +28,7 @@ process.env.TZ = 'America/Bogota';
 const app = express();
 
 // Middleware
-app.use(cors({
-<<<<<<< HEAD
-  origin: 'http://localhost:3000', // Cambia esto al origen de tu frontend
-  credentials: true // Permite el envío de cookies y encabezados de autenticación
-=======
-  origin: 'https://distribuidora-one.vercel.app',
-  credentials: true, 
->>>>>>> 6358a67a974df0e3611f7d0dcde6c5738374d095
-}));
+app.use(cors({}));
 
 app.use(express.json());
 app.use(fileUpload({
